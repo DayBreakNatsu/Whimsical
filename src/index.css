@@ -1,0 +1,26 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-beige text-soft-brown;
+    margin: 0;
+    padding: 0;
+    font-family: 'Georgia', serif;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply bg-accent-red text-white px-6 py-3 rounded-full font-semibold hover:bg-red-700 transition-colors;
+  }
+  
+  .btn-secondary {
+    @apply bg-muted-pink text-soft-brown px-6 py-3 rounded-full font-semibold hover:bg-pink-300 transition-colors;
+  }
+  
+  .card {
+    @apply bg-white rounded-lg shadow-lg overflow-hidden;
+  }
+}
