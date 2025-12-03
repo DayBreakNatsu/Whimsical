@@ -97,19 +97,19 @@ const ProductCard = ({ product }) => {
         )}
       </div>
 
-      <div className="p-4 space-y-3">
+      <div className="p-4 sm:p-5 space-y-3">
         <div>
           <p className="text-xs uppercase tracking-[0.4em] text-soft-brown/70">{product.category}</p>
-          <h3 className="text-lg font-semibold text-soft-brown">{product.name}</h3>
+          <h3 className="text-base sm:text-lg font-semibold text-soft-brown line-clamp-2">{product.name}</h3>
         </div>
         <p className="text-sm text-gray-600 line-clamp-2">{product.description}</p>
 
-        <div className="flex items-center justify-between">
-          <span className="text-2xl font-bold text-accent-red">{formatCurrency(product.price)}</span>
+        <div className="flex items-center justify-between gap-3 pt-2">
+          <span className="text-xl sm:text-2xl font-bold text-accent-red">{formatCurrency(product.price)}</span>
           <button
             onClick={handleAddToCart}
             disabled={isOutOfStock}
-            className={`rounded-full border border-accent-red/30 px-4 py-2 text-sm font-semibold transition ${
+            className={`rounded-full border border-accent-red/30 px-3 sm:px-4 py-2.5 sm:py-2 text-xs sm:text-sm font-semibold transition active:scale-95 ${
               isOutOfStock
                 ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
                 : 'text-accent-red hover:bg-accent-red hover:text-white'

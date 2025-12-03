@@ -17,7 +17,7 @@ const TextField = ({ label, value, onChange, textarea }) => (
       <textarea
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="mt-1 w-full rounded-xl border border-beige/70 bg-white/80 px-3 py-2 text-gray-700 shadow-sm focus:border-accent-red focus:ring-2 focus:ring-accent-red/30"
+        className="mt-1 w-full rounded-xl border border-beige/70 bg-white/80 px-3 py-2.5 sm:py-2 text-base sm:text-sm text-gray-700 shadow-sm focus:border-accent-red focus:ring-2 focus:ring-accent-red/30"
         rows={3}
       />
     ) : (
@@ -25,7 +25,7 @@ const TextField = ({ label, value, onChange, textarea }) => (
         type="text"
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="mt-1 w-full rounded-xl border border-beige/70 bg-white/80 px-3 py-2 text-gray-700 shadow-sm focus:border-accent-red focus:ring-2 focus:ring-accent-red/30"
+        className="mt-1 w-full rounded-xl border border-beige/70 bg-white/80 px-3 py-2.5 sm:py-2 text-base sm:text-sm text-gray-700 shadow-sm focus:border-accent-red focus:ring-2 focus:ring-accent-red/30"
       />
     )}
   </label>
@@ -563,12 +563,12 @@ const AdminPage = () => {
               value={productSearch}
               onChange={(e) => setProductSearch(e.target.value)}
               placeholder="Quick search by name or category"
-              className="w-full rounded-2xl border border-beige/70 bg-white/80 px-4 py-2 text-gray-700 shadow-sm focus:border-accent-red focus:ring-2 focus:ring-accent-red/30"
+              className="w-full rounded-2xl border border-beige/70 bg-white/80 px-4 py-2.5 sm:py-2 text-base sm:text-sm text-gray-700 shadow-sm focus:border-accent-red focus:ring-2 focus:ring-accent-red/30"
             />
           </label>
           <button
             onClick={() => setShowAddPanel(true)}
-            className="inline-flex items-center justify-center rounded-full bg-accent-red px-6 py-3 text-white font-semibold shadow-md hover:-translate-y-0.5 transition"
+            className="inline-flex items-center justify-center rounded-full bg-accent-red px-4 sm:px-6 py-3 text-sm sm:text-base text-white font-semibold shadow-md hover:-translate-y-0.5 transition active:scale-95 w-full sm:w-auto"
           >
             + Add Product
           </button>
