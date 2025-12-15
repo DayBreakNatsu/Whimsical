@@ -1,5 +1,27 @@
 import { supabase, handleSupabaseError } from '../lib/supabase'
 
+// Normalize DB product rows (snake_case) to app-friendly camelCase
+const normalizeProduct = (p) => {
+  if (!p) return p
+  return {
+    ...p,
+    id: p.id,
+    name: p.name,
+    description: p.description,
+    price: p.price,
+    category: p.category,
+    image: p.image,
+    gallery: Array.isArray(p.gallery) ? p.gallery : p.gallery ? [p.gallery] : [],
+    stock: p.stock,
+    isNew: p.is_new ?? p.isNew ?? false,
+    isOnSale: p.is_on_sale ?? p.isOnSale ?? false,
+    isFeatured: p.is_featured ?? p.isFeatured ?? false,
+    isLimitedStock: p.is_limited_stock ?? p.isLimitedStock ?? false,
+    createdAt: p.created_at ?? p.createdAt,
+    reviews: p.reviews ?? p.review_list ?? null,
+  }
+}
+
 /**
  * Fetch all products
  */
@@ -11,7 +33,7 @@ export const getProducts = async () => {
       .order('created_at', { ascending: false })
 
     if (error) throw error
-    return { data, error: null }
+    return { data: (data || []).map(normalizeProduct), error: null }
   } catch (error) {
     return { data: null, error: handleSupabaseError(error) }
   }
@@ -29,7 +51,7 @@ export const getProductById = async (id) => {
       .single()
 
     if (error) throw error
-    return { data, error: null }
+    return { data: normalizeProduct(data), error: null }
   } catch (error) {
     return { data: null, error: handleSupabaseError(error) }
   }
@@ -101,7 +123,7 @@ export const getProductsByCategory = async (category) => {
       .order('created_at', { ascending: false })
 
     if (error) throw error
-    return { data, error: null }
+    return { data: (data || []).map(normalizeProduct), error: null }
   } catch (error) {
     return { data: null, error: handleSupabaseError(error) }
   }
@@ -120,7 +142,7 @@ export const getNewProducts = async (limit = 4) => {
       .limit(limit)
 
     if (error) throw error
-    return { data, error: null }
+    return { data: (data || []).map(normalizeProduct), error: null }
   } catch (error) {
     return { data: null, error: handleSupabaseError(error) }
   }

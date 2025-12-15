@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { getProducts } from '../services/productService';
 /* eslint-disable react-refresh/only-export-components */
 
 const STORAGE_KEY = 'whimsical-site-content-v1';
@@ -41,75 +42,7 @@ export const defaultContent = {
     shippingFee: 350,
     taxRate: 0.08,
   },
-  products: [
-    {
-      id: 1,
-      name: 'Rose Fuzzy Bouquet',
-      description: 'Soft and fuzzy artificial rose bouquet perfect for decoration',
-      price: 24.99,
-      image: 'https://via.placeholder.com/300x200/F5E6D3/8B4513?text=Rose+Bouquet',
-      gallery: [
-        'https://via.placeholder.com/300x200/E8B4B8/8B4513?text=Rose+Detail',
-        'https://via.placeholder.com/300x200/FFB6C1/8B4513?text=Rose+Side',
-      ],
-      category: 'Bouquet',
-      isNew: true,
-      stock: 12,
-      reviews: [
-        {
-          id: 1,
-          name: 'Lara',
-          rating: 5,
-          comment: 'Gorgeous petals and arrived on time!'
-        },
-      ],
-    },
-    {
-      id: 2,
-      name: 'Flower Keychain',
-      description: 'Cute fuzzy flower keychain with charm',
-      price: 8.99,
-      image: 'https://via.placeholder.com/300x200/F5E6D3/8B4513?text=Flower+Keychain',
-      gallery: [
-        'https://via.placeholder.com/300x200/E8B4B8/8B4513?text=Keychain+Detail',
-      ],
-      category: 'Keychain',
-      isNew: false,
-      stock: 30,
-      reviews: [
-        {
-          id: 1,
-          name: 'Mico',
-          rating: 4,
-          comment: 'Cute charm! Wish it was slightly bigger.'
-        },
-      ],
-    },
-    {
-      id: 3,
-      name: 'Sunflower Fuzzy Bouquet',
-      description: 'Bright and cheerful fuzzy sunflower arrangement',
-      price: 29.99,
-      image: 'https://via.placeholder.com/300x200/F5E6D3/8B4513?text=Sunflower+Bouquet',
-      gallery: [],
-      category: 'Bouquet',
-      isNew: true,
-      stock: 8,
-      reviews: [],
-    },
-    {
-      id: 4,
-      name: 'Butterfly Keychain Set',
-      description: 'Set of 3 fuzzy butterfly keychains',
-      price: 15.99,
-      image: 'https://via.placeholder.com/300x200/F5E6D3/8B4513?text=Butterfly+Keychains',
-      gallery: [],
-      category: 'Keychain',
-      isNew: false,
-      stock: 18,
-      reviews: [],
-    },
-  ],
+  products: [],
 };
 
 const hydrateContent = (saved) => {
@@ -196,6 +129,30 @@ export function SiteContentProvider({ children }) {
       console.warn('Failed to persist content', err);
     }
   }, [content]);
+
+  // Load products from Supabase on mount
+  useEffect(() => {
+    const loadProductsFromSupabase = async () => {
+      try {
+        const { data: products, error } = await getProducts();
+        if (error) {
+          console.warn('Failed to load products from Supabase:', error);
+          return;
+        }
+        
+        if (products && products.length > 0) {
+          setContent((prev) => ({
+            ...prev,
+            products: products,
+          }));
+        }
+      } catch (err) {
+        console.warn('Error loading products from Supabase:', err);
+      }
+    };
+
+    loadProductsFromSupabase();
+  }, []);
 
   const updateContent = (section, updates) => {
     setContent((prev) => ({

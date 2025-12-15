@@ -1,5 +1,10 @@
 import { supabase, handleSupabaseError } from '../lib/supabase'
 
+// Allow a safe local development bypass when Supabase is unavailable.
+// Enable by setting VITE_DEV_AUTH_BYPASS=true in your .env for local development only.
+const DEV_BYPASS = Boolean(import.meta.env.VITE_DEV_AUTH_BYPASS === 'true');
+const DEV_ADMIN_PASSWORD = import.meta.env.VITE_DEV_ADMIN_PASSWORD || 'Achlys2025!';
+
 /**
  * Sign up with email and password
  */
@@ -33,8 +38,24 @@ export const signIn = async (email, password) => {
     if (error) throw error
     return { data, error: null }
   } catch (error) {
-    return { data: null, error: handleSupabaseError(error) }
+    // If Supabase is failing and dev bypass is enabled, allow a local mock signin for development.
+    const handled = handleSupabaseError(error)
+    if (DEV_BYPASS && (typeof window !== 'undefined') && (window.location.hostname === 'localhost' || import.meta.env.MODE === 'development')) {
+      if (password === DEV_ADMIN_PASSWORD && (email.toLowerCase().includes('admin') || email.endsWith('@whimsical.local'))) {
+        return { data: { user: { email } }, error: null }
+      }
+    }
+    return { data: null, error: handled }
   }
+}
+
+// Explicit dev sign-in helper (callable from UI) — returns same shape as `signIn`.
+export const devSignIn = async (email, password) => {
+  if (!DEV_BYPASS) return { data: null, error: { message: 'Dev bypass disabled' } }
+  if (password === DEV_ADMIN_PASSWORD && (email.toLowerCase().includes('admin') || email.endsWith('@whimsical.local'))) {
+    return { data: { user: { email } }, error: null }
+  }
+  return { data: null, error: { message: 'Invalid dev credentials' } }
 }
 
 /**

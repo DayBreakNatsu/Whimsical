@@ -18,19 +18,19 @@ const Header = () => {
     <header className="bg-white/90 backdrop-blur shadow-sm sticky top-0 z-30">
       <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16 sm:h-20">
-          <Link to="/" className="flex items-center space-x-2 sm:space-x-4 group flex-shrink-0">
+          <Link to="/" className="flex items-center space-x-2 sm:space-x-4 group flex-shrink-0 min-w-0">
             <img
               src="/logo-whimsical.png"
               alt="Whimsical by Achlys logo"
-              className="w-12 h-12 sm:w-16 sm:h-16 object-contain drop-shadow-sm group-hover:scale-105 transition-transform"
+              className="w-12 h-12 sm:w-16 sm:h-16 object-contain drop-shadow-sm group-hover:scale-105 transition-transform flex-shrink-0"
               loading="lazy"
             />
-            <div className="hidden sm:block">
-              <p className="text-xs sm:text-sm tracking-[0.3em] text-soft-brown">BY ACHLYS</p>
-              <p className="text-lg sm:text-2xl font-bold text-accent-red" style={{ fontFamily: 'Georgia, serif' }}>
+            <div className="min-w-0 flex-1">
+              <p className="text-xs sm:text-sm tracking-[0.2em] sm:tracking-[0.3em] text-soft-brown truncate">BY ACHLYS</p>
+              <p className="text-base sm:text-2xl font-bold text-accent-red truncate" style={{ fontFamily: 'Georgia, serif' }}>
                 Whimsical
               </p>
-              <p className="text-xs text-soft-brown uppercase">Fuzzy Petals & Keychains</p>
+              <p className="text-xs text-soft-brown uppercase whitespace-nowrap overflow-hidden text-ellipsis">Fuzzy Petals & Keychains</p>
             </div>
           </Link>
 

@@ -14,7 +14,7 @@ const cartReducer = (state, action) => {
       };
     
     case 'ADD_TO_CART': {
-      const existingItem = state.items.find(item => item.id === action.payload.id);
+      const existingItem = state.items.find(item => String(item.id) === String(action.payload.id));
       const availableStock = action.payload.stock ?? Infinity;
       
       if (existingItem) {
@@ -25,7 +25,7 @@ const cartReducer = (state, action) => {
         return {
           ...state,
           items: state.items.map(item =>
-            item.id === action.payload.id
+            String(item.id) === String(action.payload.id)
               ? { ...item, quantity: newQuantity }
               : item
           ),
@@ -45,7 +45,7 @@ const cartReducer = (state, action) => {
     case 'REMOVE_FROM_CART':
       return {
         ...state,
-        items: state.items.filter(item => item.id !== action.payload),
+        items: state.items.filter(item => String(item.id) !== String(action.payload)),
       };
     
     case 'UPDATE_QUANTITY':

@@ -28,14 +28,9 @@ const ProductsPage = () => {
       const { data, error } = await getProducts();
       if (!isMounted) return;
       if (error) {
-        setError(error.error || 'Failed to load products');
+        setError(error?.message || 'Failed to load products');
       } else {
-        // Map DB fields to UI expectations (e.g., is_new -> isNew)
-        const mapped = (data || []).map((p) => ({
-          ...p,
-          isNew: p.is_new,
-        }));
-        setProducts(mapped);
+        setProducts(data || []);
       }
       setLoading(false);
     };

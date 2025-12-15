@@ -6,7 +6,7 @@ import {
   deleteProduct as deleteProductApi,
 } from '../services/productService';
 import { getAllOrders } from '../services/orderService';
-import { signIn, signOut as supaSignOut, isAdmin } from '../services/authService';
+import { signIn, signOut as supaSignOut, isAdmin, devSignIn } from '../services/authService';
 
 const AUTH_KEY = 'whimsical-admin-auth';
 
@@ -17,7 +17,7 @@ const TextField = ({ label, value, onChange, textarea }) => (
       <textarea
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="mt-1 w-full rounded-xl border border-beige/70 bg-white/80 px-3 py-2.5 sm:py-2 text-base sm:text-sm text-gray-700 shadow-sm focus:border-accent-red focus:ring-2 focus:ring-accent-red/30"
+        className="mt-2 w-full rounded-lg sm:rounded-xl border border-beige/70 bg-white/80 px-3.5 sm:px-3 py-3 sm:py-2 text-base sm:text-sm text-gray-700 shadow-sm focus:border-accent-red focus:ring-2 focus:ring-accent-red/30 resize-none"
         rows={3}
       />
     ) : (
@@ -25,7 +25,7 @@ const TextField = ({ label, value, onChange, textarea }) => (
         type="text"
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="mt-1 w-full rounded-xl border border-beige/70 bg-white/80 px-3 py-2.5 sm:py-2 text-base sm:text-sm text-gray-700 shadow-sm focus:border-accent-red focus:ring-2 focus:ring-accent-red/30"
+        className="mt-2 w-full rounded-lg sm:rounded-xl border border-beige/70 bg-white/80 px-3.5 sm:px-3 py-3 sm:py-2 text-base sm:text-sm text-gray-700 shadow-sm focus:border-accent-red focus:ring-2 focus:ring-accent-red/30"
       />
     )}
   </label>
@@ -83,7 +83,7 @@ const AdminPage = () => {
 
     const { error } = await signIn(email, password);
     if (error) {
-      setLoginError(error.error || 'Login failed.');
+      setLoginError(error?.message || 'Login failed.');
       return;
     }
 
@@ -94,6 +94,21 @@ const AdminPage = () => {
       return;
     }
 
+    localStorage.setItem(AUTH_KEY, 'true');
+    setIsAuthed(true);
+    setPassword('');
+  };
+
+  const handleDevLogin = async (e) => {
+    e?.preventDefault?.();
+    setLoginError('');
+    const { data, error } = await devSignIn(username.includes('@') ? username : 'admin@whimsical.local', password);
+    if (error) {
+      setLoginError(error?.message || 'Dev login failed.');
+      return;
+    }
+
+    // treat as logged in
     localStorage.setItem(AUTH_KEY, 'true');
     setIsAuthed(true);
     setPassword('');
@@ -304,43 +319,77 @@ const AdminPage = () => {
 
   if (!isAuthed) {
     return (
-      <div className="min-h-[60vh] flex items-center justify-center px-4">
-        <form onSubmit={handleLogin} className="bg-white rounded-3xl shadow-xl p-8 max-w-md w-full space-y-4">
-          <h1 className="text-2xl font-semibold text-soft-brown text-center">Admin Login</h1>
-          <p className="text-sm text-gray-500 text-center">Sign in to manage products and orders.</p>
-          <label className="block text-sm font-medium text-soft-brown">
-            <span>Username</span>
-            <input
-              type="text"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              className="mt-1 w-full rounded-2xl border border-beige/60 px-4 py-3 focus:border-accent-red focus:ring-2 focus:ring-accent-red/30"
-              placeholder="Admin"
-            />
-          </label>
-          <div className="relative">
-            <input
-              type={showPassword ? 'text' : 'password'}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full rounded-2xl border border-beige/60 px-4 py-3 pr-12 focus:border-accent-red focus:ring-2 focus:ring-accent-red/30"
-              placeholder="Password"
-            />
-            <button
-              type="button"
-              onClick={() => setShowPassword((prev) => !prev)}
-              className="absolute inset-y-0 right-3 flex items-center text-soft-brown text-sm"
-              aria-label={showPassword ? 'Hide password' : 'Show password'}
-            >
-              {showPassword ? 'Hide' : 'Show'}
-            </button>
+      <section className="relative py-20 overflow-hidden">
+        <div className="absolute inset-0">
+          <img
+            src="https://images.unsplash.com/photo-1501004318641-b39e6451bec6?auto=format&fit=crop&w=1600&q=80"
+            alt="Soft floral background"
+            className="w-full h-full object-cover opacity-10"
+            loading="lazy"
+          />
+          <div className="absolute inset-0 bg-gradient-to-r from-muted-pink/90 via-beige/95 to-beige" />
+        </div>
+
+        <div className="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-center min-h-[60vh]">
+          <div className="bg-white/80 backdrop-blur p-6 sm:p-8 rounded-3xl shadow-2xl w-full max-w-md">
+            <div className="text-center mb-4">
+              <img src="/logo-whimsical.png" alt="Whimsical logo" className="w-28 mx-auto mb-4" />
+              <h1 className="text-2xl sm:text-3xl font-bold text-soft-brown">Admin</h1>
+              <p className="text-xs sm:text-sm text-gray-500 mt-1">Store Management Portal</p>
+            </div>
+
+            <form onSubmit={handleLogin} className="space-y-4">
+              <label className="block text-sm font-medium text-soft-brown">
+                <span>Username</span>
+                <input
+                  type="text"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  className="mt-2 w-full rounded-xl border border-beige/60 px-4 py-3 sm:py-2.5 text-base sm:text-sm focus:border-accent-red focus:ring-2 focus:ring-accent-red/30"
+                  placeholder="Admin"
+                  autoFocus
+                />
+              </label>
+
+              <label className="block text-sm font-medium text-soft-brown">
+                <span>Password</span>
+                <div className="relative mt-2">
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="w-full rounded-xl border border-beige/60 px-4 py-3 sm:py-2.5 pr-12 text-base sm:text-sm focus:border-accent-red focus:ring-2 focus:ring-accent-red/30"
+                    placeholder="Password"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((prev) => !prev)}
+                    className="absolute inset-y-0 right-3 flex items-center text-soft-brown text-xs sm:text-sm hover:text-accent-red transition"
+                    aria-label={showPassword ? 'Hide password' : 'Show password'}
+                  >
+                    {showPassword ? 'Hide' : 'Show'}
+                  </button>
+                </div>
+              </label>
+
+              {loginError && <p className="text-xs sm:text-sm text-red-500 bg-red-50/50 p-2.5 rounded-lg">{loginError}</p>}
+
+              <button type="submit" className="btn-primary w-full py-3 sm:py-2.5 text-base sm:text-sm font-semibold">
+                Sign In
+              </button>
+              <div className="text-center mt-2">
+                <button
+                  type="button"
+                  onClick={handleDevLogin}
+                  className="text-xs text-accent-red hover:underline"
+                >
+                  Use local dev login
+                </button>
+              </div>
+            </form>
           </div>
-          {loginError && <p className="text-sm text-red-500">{loginError}</p>}
-          <button type="submit" className="btn-primary w-full">
-            Sign In
-          </button>
-        </form>
-      </div>
+        </div>
+      </section>
     );
   }
 
@@ -354,63 +403,110 @@ const AdminPage = () => {
     product.category.toLowerCase().includes(productSearch.toLowerCase())
   );
 
+  // Mobile menu state for admin navigation
+  const [showAdminMenu, setShowAdminMenu] = React.useState(false);
+
   return (
-    <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-      <div className="grid gap-8 lg:grid-cols-[250px_1fr]">
-        <aside className="bg-white rounded-3xl shadow-lg border border-beige/60 p-6 lg:sticky lg:top-24 h-fit">
-          <p className="text-xs uppercase tracking-[0.5em] text-soft-brown/60">Dashboard</p>
-          <h1 className="text-2xl font-bold text-soft-brown mb-4">Content Editor</h1>
-          <nav className="space-y-2 text-sm font-medium text-soft-brown">
-            {[
-              ['hero', 'Hero Banner'],
-              ['about', 'About Story'],
-              ['inventory', 'Inventory'],
-              ['orders', 'Orders'],
-            ].map(([href, label]) => (
-              <a
-                key={href}
-                href={`#${href}`}
-                className="block rounded-2xl border border-transparent px-3 py-2 hover:border-muted-pink hover:bg-muted-pink/20"
-              >
-                {label}
-              </a>
-            ))}
-          </nav>
-          <div className="mt-6 space-y-3">
-            <button
-              onClick={resetContent}
-              className="w-full rounded-full border border-beige/80 px-4 py-2 text-sm text-soft-brown hover:bg-beige/40"
-            >
-              Reset Defaults
-            </button>
-            <button onClick={handleLogout} className="w-full rounded-full bg-gray-800 px-4 py-2 text-sm text-white">
-              Log out
-            </button>
+    <div className="min-h-screen bg-gradient-to-b from-beige/30 to-white overflow-x-hidden">
+      <div className="w-full max-w-full mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-2 sm:py-6 md:py-10">
+        {/* Mobile Admin Header */}
+        <div className="lg:hidden flex items-center justify-between mb-3 gap-2">
+          <h1 className="text-sm sm:text-lg font-bold text-soft-brown truncate">Admin</h1>
+          <button
+            onClick={() => setShowAdminMenu(!showAdminMenu)}
+            className="p-1.5 text-soft-brown hover:text-accent-red hover:bg-muted-pink/20 rounded-lg transition flex-shrink-0"
+            aria-label="Toggle admin menu"
+            aria-expanded={showAdminMenu}
+          >
+            <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+          </button>
+        </div>
+
+        <div className="grid gap-3 md:gap-6 lg:gap-8 lg:grid-cols-[160px_1fr]">
+          {/* Sidebar */}
+          <aside className={`${showAdminMenu ? 'block' : 'hidden'} lg:block lg:sticky lg:top-20 h-fit order-2 lg:order-1 min-w-0`}>
+            <div className="bg-white rounded-2xl shadow-lg border-2 border-beige/40 p-3 sm:p-4 md:p-5">
+              <div className="lg:block">
+                <p className="text-xs uppercase tracking-[0.5em] text-soft-brown/60">Dashboard</p>
+                <h1 className="hidden lg:block text-lg sm:text-2xl font-bold text-soft-brown mb-3 sm:mb-4">Content Editor</h1>
+              </div>
+              <nav className="space-y-1 sm:space-y-2 text-xs sm:text-sm font-medium text-soft-brown">
+                {[
+                  ['hero', 'Hero Banner'],
+                  ['about', 'About Story'],
+                  ['inventory', 'Inventory'],
+                  ['orders', 'Orders'],
+                  ['storage', 'Storage'],
+                ].map(([href, label]) => (
+                  <a
+                    key={href}
+                    href={`#${href}`}
+                    onClick={() => setShowAdminMenu(false)}
+                    className="block rounded-lg px-2.5 sm:px-3 py-2 sm:py-2 hover:bg-muted-pink/20 hover:text-accent-red transition active:bg-muted-pink/40"
+                  >
+                    {label}
+                  </a>
+                ))}
+              </nav>
+              <div className="mt-4 sm:mt-6 space-y-2 sm:space-y-3">
+                <button
+                  onClick={resetContent}
+                  className="w-full rounded-full border border-beige/80 px-3 sm:px-4 py-2.5 sm:py-2 text-xs sm:text-sm text-soft-brown hover:bg-beige/40 active:bg-beige/60 font-medium transition"
+                >
+                  Reset Defaults
+                </button>
+                <button 
+                  onClick={handleLogout} 
+                  className="w-full rounded-full bg-gray-800 px-3 sm:px-4 py-2.5 sm:py-2 text-xs sm:text-sm text-white hover:bg-gray-900 active:bg-gray-950 font-medium transition"
+                >
+                  Log out
+                </button>
+              </div>
+            </div>
+          </aside>
+
+          <div className="space-y-4 sm:space-y-6 md:space-y-8 lg:space-y-10 order-1 lg:order-2 w-full min-w-0">
+      <section id="hero" className="bg-gradient-to-br from-white to-beige/20 rounded-2xl sm:rounded-3xl shadow-lg hover:shadow-xl p-3 sm:p-5 md:p-7 space-y-4 sm:space-y-6 border-2 border-beige/40 transition-shadow duration-300 w-full">
+        <div className="space-y-1">
+          <p className="text-xs uppercase tracking-[0.6em] text-accent-red font-semibold">Hero Section</p>
+          <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-soft-brown">Hero Banner</h2>
+          <p className="text-sm text-gray-600">Customize the homepage hero section that welcomes visitors</p>
+        </div>
+
+        <div className="space-y-4 sm:space-y-5 bg-white/60 rounded-2xl p-4 sm:p-6 backdrop-blur">
+          <div>
+            <TextField label="Tagline" value={hero.tagline} onChange={(value) => updateContent('hero', { tagline: value })} />
+            <p className="text-xs text-gray-500 mt-1 ml-1">Small text above the main heading</p>
           </div>
-        </aside>
-
-        <div className="space-y-10">
-      <section id="hero" className="bg-white rounded-3xl shadow-xl p-6 space-y-6 border border-beige/50">
-        <div>
-          <p className="text-xs uppercase tracking-[0.5em] text-soft-brown/60">Hero</p>
-          <h2 className="text-2xl font-semibold text-soft-brown">Hero Banner</h2>
-        </div>
-        <div className="grid gap-4">
-          <TextField label="Tagline" value={hero.tagline} onChange={(value) => updateContent('hero', { tagline: value })} />
-          <TextField label="Heading" value={hero.heading} onChange={(value) => updateContent('hero', { heading: value })} />
-          <TextField
-            label="Description"
-            value={hero.description}
-            onChange={(value) => updateContent('hero', { description: value })}
-            textarea
-          />
+          <div>
+            <TextField label="Heading" value={hero.heading} onChange={(value) => updateContent('hero', { heading: value })} />
+            <p className="text-xs text-gray-500 mt-1 ml-1">Main hero section title</p>
+          </div>
+          <div>
+            <TextField
+              label="Description"
+              value={hero.description}
+              onChange={(value) => updateContent('hero', { description: value })}
+              textarea
+            />
+            <p className="text-xs text-gray-500 mt-1 ml-1">Brief description below the heading</p>
+          </div>
         </div>
 
-        <div>
-          <h3 className="text-lg font-semibold text-soft-brown mb-4">Stats</h3>
-          <div className="grid gap-4 md:grid-cols-3">
+        <div className="space-y-4">
+          <div className="space-y-1">
+            <h3 className="text-lg sm:text-xl font-bold text-soft-brown">📊 Featured Statistics</h3>
+            <p className="text-sm text-gray-600">Show key metrics on the hero section</p>
+          </div>
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {hero.stats.map((stat, index) => (
-              <div key={`${stat.label}-${index}`} className="rounded-2xl border border-beige/60 p-4 space-y-3">
+              <div key={`${stat.label}-${index}`} className="group bg-white rounded-2xl border-2 border-beige/40 hover:border-accent-red/60 p-4 sm:p-5 space-y-3 sm:space-y-4 transition-all duration-300 shadow-sm hover:shadow-md">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs uppercase tracking-wider font-semibold text-soft-brown/60 group-hover:text-accent-red transition-colors">Stat {index + 1}</span>
+                  <span className="text-2xl">📈</span>
+                </div>
                 <TextField
                   label="Value"
                   value={stat.value}
@@ -427,68 +523,96 @@ const AdminPage = () => {
         </div>
       </section>
 
-      <section className="bg-white rounded-3xl shadow-xl p-6 space-y-6 border border-beige/50">
-        <div>
-          <p className="text-xs uppercase tracking-[0.5em] text-soft-brown/60">General</p>
-          <h2 className="text-2xl font-semibold text-soft-brown">Shop Settings</h2>
-          <p className="text-sm text-gray-500">Control shipping fees and tax rates applied at checkout.</p>
+      <section className="bg-gradient-to-br from-white to-beige/20 rounded-2xl sm:rounded-3xl shadow-lg hover:shadow-xl p-3 sm:p-5 md:p-7 space-y-4 sm:space-y-6 border-2 border-beige/40 transition-shadow duration-300">
+        <div className="space-y-1 sm:space-y-2">
+          <p className="text-xs uppercase tracking-[0.6em] text-accent-red font-semibold">⚙️ Configuration</p>
+          <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-soft-brown">Shop Settings</h2>
+          <p className="text-sm text-gray-600">Configure checkout costs and fees</p>
         </div>
-        <div className="grid gap-4 md:grid-cols-2">
-          <TextField
-            label="Flat Shipping Fee (PHP)"
-            value={general?.shippingFee ?? 0}
-            onChange={(value) => updateContent('general', { shippingFee: Number(value) || 0 })}
-          />
-          <TextField
-            label="Tax Rate (e.g., 0.08 for 8%)"
-            value={general?.taxRate ?? 0}
-            onChange={(value) => updateContent('general', { taxRate: Number(value) || 0 })}
-          />
+
+        <div className="grid gap-4 sm:gap-6 sm:grid-cols-2">
+          <div className="bg-white/60 rounded-2xl p-4 sm:p-5 backdrop-blur border border-beige/40 hover:border-accent-red/30 transition-colors">
+            <TextField
+              label="Flat Shipping Fee (PHP)"
+              value={general?.shippingFee ?? 0}
+              onChange={(value) => updateContent('general', { shippingFee: Number(value) || 0 })}
+            />
+            <p className="text-xs text-gray-500 mt-2 ml-1">Applied to all orders</p>
+          </div>
+          <div className="bg-white/60 rounded-2xl p-4 sm:p-5 backdrop-blur border border-beige/40 hover:border-accent-red/30 transition-colors">
+            <TextField
+              label="Tax Rate (e.g., 0.08 for 8%)"
+              value={general?.taxRate ?? 0}
+              onChange={(value) => updateContent('general', { taxRate: Number(value) || 0 })}
+            />
+            <p className="text-xs text-gray-500 mt-2 ml-1">Percentage applied to subtotal</p>
+          </div>
         </div>
       </section>
 
-      <section className="bg-white rounded-3xl shadow-xl p-6 space-y-6 border border-beige/50">
-        <div>
-          <p className="text-xs uppercase tracking-[0.5em] text-soft-brown/60">Socials</p>
-          <h2 className="text-2xl font-semibold text-soft-brown">Social Links</h2>
-          <p className="text-sm text-gray-500">Update the links used across the site.</p>
+      <section className="bg-gradient-to-bl from-white to-muted-pink/10 rounded-2xl sm:rounded-3xl shadow-lg hover:shadow-xl p-3 sm:p-5 md:p-7 space-y-4 sm:space-y-6 border-2 border-beige/40 transition-shadow duration-300">
+        <div className="space-y-1 sm:space-y-2">
+          <p className="text-xs uppercase tracking-[0.6em] text-accent-red font-semibold">🔗 Community</p>
+          <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-soft-brown">Social Links</h2>
+          <p className="text-sm text-gray-600">Connect with customers on social media</p>
         </div>
-        <div className="grid gap-4 md:grid-cols-3">
+
+        <div className="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-3">
           {[
-            ['facebook', 'Facebook'],
-            ['instagram', 'Instagram'],
-            ['tiktok', 'TikTok'],
-          ].map(([key, label]) => (
-            <TextField
-              key={key}
-              label={label}
-              value={socials?.[key] || ''}
-              onChange={(value) => updateContent('socials', { [key]: value })}
-            />
+            ['facebook', 'Facebook', '👍'],
+            ['instagram', 'Instagram', '📸'],
+            ['tiktok', 'TikTok', '🎵'],
+          ].map(([key, label, emoji]) => (
+            <div key={key} className="bg-white/60 rounded-2xl p-4 sm:p-5 backdrop-blur border border-beige/40 hover:border-accent-red/30 transition-colors space-y-3">
+              <div className="flex items-center gap-2">
+                <span className="text-2xl">{emoji}</span>
+                <h3 className="font-semibold text-soft-brown">{label}</h3>
+              </div>
+              <TextField
+                label="Profile URL"
+                value={socials?.[key] || ''}
+                onChange={(value) => updateContent('socials', { [key]: value })}
+              />
+            </div>
           ))}
         </div>
       </section>
 
-      <section id="about" className="bg-white rounded-3xl shadow-xl p-6 space-y-6 border border-beige/50">
-        <div>
-          <p className="text-xs uppercase tracking-[0.5em] text-soft-brown/60">Story</p>
-          <h2 className="text-2xl font-semibold text-soft-brown">About Section</h2>
-        </div>
-        <div className="grid gap-4">
-          <TextField label="Heading" value={about.heading} onChange={(value) => updateContent('about', { heading: value })} />
-          <TextField
-            label="Description"
-            value={about.description}
-            onChange={(value) => updateContent('about', { description: value })}
-            textarea
-          />
+      <section id="about" className="bg-gradient-to-br from-white to-beige/20 rounded-2xl sm:rounded-3xl shadow-lg hover:shadow-xl p-3 sm:p-5 md:p-7 space-y-4 sm:space-y-6 border-2 border-beige/40 transition-shadow duration-300">
+        <div className="space-y-1 sm:space-y-2">
+          <p className="text-xs uppercase tracking-[0.6em] text-accent-red font-semibold">📖 Story</p>
+          <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-soft-brown">About Section</h2>
+          <p className="text-sm text-gray-600">Tell customers your brand story</p>
         </div>
 
-        <div>
-          <h3 className="text-lg font-semibold text-soft-brown mb-4">Highlights</h3>
-          <div className="grid gap-4 md:grid-cols-2">
+        <div className="space-y-4 sm:space-y-5 bg-white/60 rounded-2xl p-4 sm:p-6 backdrop-blur border border-beige/40">
+          <div>
+            <TextField label="Heading" value={about.heading} onChange={(value) => updateContent('about', { heading: value })} />
+            <p className="text-xs text-gray-500 mt-1 ml-1">Main section title</p>
+          </div>
+          <div>
+            <TextField
+              label="Description"
+              value={about.description}
+              onChange={(value) => updateContent('about', { description: value })}
+              textarea
+            />
+            <p className="text-xs text-gray-500 mt-1 ml-1">Your brand story</p>
+          </div>
+        </div>
+
+        <div className="space-y-4">
+          <div className="space-y-1">
+            <h3 className="text-lg sm:text-xl font-bold text-soft-brown">✨ Highlights</h3>
+            <p className="text-sm text-gray-600">Key points about your business</p>
+          </div>
+          <div className="grid gap-4 sm:gap-5 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
             {about.highlights.map((item, index) => (
-              <div key={`${item.title}-${index}`} className="rounded-2xl border border-beige/60 p-4 space-y-3">
+              <div key={`${item.title}-${index}`} className="group bg-white rounded-2xl border-2 border-beige/40 hover:border-muted-pink/60 p-4 sm:p-5 space-y-3 transition-all duration-300 shadow-sm hover:shadow-md hover:bg-white/80">
+                <div className="flex items-start justify-between">
+                  <span className="text-xs uppercase tracking-wider font-semibold text-soft-brown/60">Highlight {index + 1}</span>
+                  <span className="text-lg">⭐</span>
+                </div>
                 <TextField
                   label="Title"
                   value={item.title}
@@ -505,23 +629,25 @@ const AdminPage = () => {
           </div>
         </div>
 
-        <div>
-          <h3 className="text-lg font-semibold text-soft-brown mb-4">Pillars</h3>
-          <div className="grid gap-4 md:grid-cols-2">
+        <div className="space-y-4">
+          <div className="space-y-1">
+            <h3 className="text-lg sm:text-xl font-bold text-soft-brown">🎯 Core Pillars</h3>
+            <p className="text-sm text-gray-600">Your business values and principles</p>
+          </div>
+          <div className="grid gap-4 sm:gap-5 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
             {about.pillars.map((item, index) => (
-              <div key={`${item.title}-${index}`} className="rounded-2xl border border-beige/60 p-4 space-y-3">
-                <TextField
-                  label="Icon"
-                  value={item.icon}
-                  onChange={(value) => updateNestedItem('about', 'pillars', index, 'icon', value)}
-                />
+              <div key={`${item.title}-${index}`} className="group bg-white rounded-2xl border-2 border-beige/40 hover:border-accent-red/40 p-4 sm:p-5 space-y-3 transition-all duration-300 shadow-sm hover:shadow-md hover:bg-white/80">
+                <div className="flex items-start justify-between">
+                  <span className="text-xs uppercase tracking-wider font-semibold text-soft-brown/60">Pillar {index + 1}</span>
+                  <span className="text-2xl">{item.icon}</span>
+                </div>
                 <TextField
                   label="Title"
                   value={item.title}
                   onChange={(value) => updateNestedItem('about', 'pillars', index, 'title', value)}
                 />
                 <TextField
-                  label="Detail"
+                  label="Description"
                   value={item.detail}
                   onChange={(value) => updateNestedItem('about', 'pillars', index, 'detail', value)}
                   textarea
@@ -532,193 +658,329 @@ const AdminPage = () => {
         </div>
       </section>
 
-      <section id="inventory" className="bg-white rounded-3xl shadow-xl p-6 space-y-6 border border-beige/50">
-        <div>
-          <p className="text-xs uppercase tracking-[0.5em] text-soft-brown/60">Inventory</p>
-          <h2 className="text-2xl font-semibold text-soft-brown">Product Catalog</h2>
-          <p className="text-sm text-gray-500">Add, edit, or remove bouquets and keychains.</p>
+      <section id="inventory" className="bg-gradient-to-br from-white to-beige/20 rounded-2xl sm:rounded-3xl shadow-lg hover:shadow-xl p-3 sm:p-5 md:p-7 space-y-4 sm:space-y-6 border-2 border-beige/40 transition-shadow duration-300">
+        <div className="space-y-1 sm:space-y-2">
+          <p className="text-xs uppercase tracking-[0.6em] text-accent-red font-semibold">📦 Inventory</p>
+          <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-soft-brown">Product Catalog</h2>
+          <p className="text-sm text-gray-600">Manage your product collection</p>
         </div>
 
-        <div className="grid gap-4 md:grid-cols-3">
+        <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-3">
           {[
-            { label: 'Products', value: totalProducts },
-            { label: 'Low Stock (≤5)', value: lowStockCount, highlight: lowStockCount > 0 },
-            { label: 'New Arrivals', value: newArrivalCount },
-          ].map(({ label, value, highlight }) => (
+            { label: 'Total Products', value: totalProducts, icon: '📦', color: 'from-blue-50 to-blue-100/50' },
+            { label: 'Low Stock (≤5)', value: lowStockCount, icon: '⚠️', color: 'from-red-50 to-red-100/50', highlight: lowStockCount > 0 },
+            { label: 'New Arrivals', value: newArrivalCount, icon: '🆕', color: 'from-green-50 to-green-100/50' },
+          ].map(({ label, value, icon, color, highlight }) => (
             <div
               key={label}
-              className={`rounded-2xl border px-4 py-3 ${highlight ? 'border-accent-red/40 bg-accent-red/5' : 'border-beige/60 bg-beige/20'}`}
+              className={`group rounded-2xl border-2 p-4 sm:p-5 transition-all duration-300 cursor-default hover:shadow-md ${
+                highlight 
+                  ? 'border-accent-red/40 bg-gradient-to-br from-accent-red/5 to-red-50/30 hover:border-accent-red/60' 
+                  : `border-beige/40 bg-gradient-to-br ${color} hover:border-accent-red/40`
+              }`}
             >
-              <p className="text-xs uppercase tracking-[0.4em] text-soft-brown/70">{label}</p>
-              <p className="text-3xl font-bold text-soft-brown mt-1">{value}</p>
+              <div className="flex items-center justify-between mb-3">
+                <p className="text-xs uppercase tracking-widest font-semibold text-soft-brown/60 group-hover:text-soft-brown transition-colors">{label}</p>
+                <span className="text-2xl group-hover:scale-110 transition-transform">{icon}</span>
+              </div>
+              <p className="text-3xl sm:text-4xl font-bold text-soft-brown">{value}</p>
+              {highlight && <p className="text-xs text-accent-red font-medium mt-2">⚠️ Action needed</p>}
             </div>
           ))}
         </div>
 
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-          <label className="flex-1 text-sm font-medium text-soft-brown">
-            <span className="sr-only">Search inventory</span>
+        <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 items-stretch bg-gradient-to-r from-beige/10 to-muted-pink/5 rounded-2xl p-4 sm:p-5">
+          <label className="flex-1 text-xs sm:text-sm font-medium text-soft-brown">
+            <span className="block mb-2 font-semibold">🔍 Search Products</span>
             <input
               type="search"
               value={productSearch}
               onChange={(e) => setProductSearch(e.target.value)}
-              placeholder="Quick search by name or category"
-              className="w-full rounded-2xl border border-beige/70 bg-white/80 px-4 py-2.5 sm:py-2 text-base sm:text-sm text-gray-700 shadow-sm focus:border-accent-red focus:ring-2 focus:ring-accent-red/30"
+              placeholder="Search by name or category..."
+              className="w-full rounded-lg sm:rounded-xl border-2 border-beige/50 hover:border-accent-red/30 focus:border-accent-red focus:ring-0 bg-white/90 px-4 py-2.5 sm:py-2 text-base sm:text-sm text-gray-700 shadow-sm transition-all duration-200 placeholder:text-gray-400"
             />
           </label>
           <button
             onClick={() => setShowAddPanel(true)}
-            className="inline-flex items-center justify-center rounded-full bg-accent-red px-4 sm:px-6 py-3 text-sm sm:text-base text-white font-semibold shadow-md hover:-translate-y-0.5 transition active:scale-95 w-full sm:w-auto"
+            className="inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-accent-red to-red-600 hover:from-red-600 hover:to-red-700 active:scale-95 px-6 sm:px-8 py-2.5 sm:py-2 text-xs sm:text-sm font-bold text-white shadow-lg hover:shadow-xl transition-all duration-200 self-end sm:self-auto whitespace-nowrap"
           >
-            + Add Product
+            <span>✨</span> Add Product
           </button>
         </div>
 
-        <div className="mt-6">
-          {filteredProducts.length === 0 && <p className="text-sm text-gray-500">No products match your search.</p>}
-          <div className="overflow-x-auto bg-white rounded-xl shadow-md border border-beige/40">
-            <table className="min-w-full divide-y divide-beige/40">
-              <thead className="bg-muted-pink/20">
-                <tr>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-soft-brown/80 uppercase tracking-wider">Image</th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-soft-brown/80 uppercase tracking-wider">Name</th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-soft-brown/80 uppercase tracking-wider">Category</th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-soft-brown/80 uppercase tracking-wider">Price</th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-soft-brown/80 uppercase tracking-wider">Stock</th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-soft-brown/80 uppercase tracking-wider">New</th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-soft-brown/80 uppercase tracking-wider">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-beige/30">
+        <div className="mt-8 overflow-hidden rounded-2xl border-2 border-beige/40 bg-white shadow-lg">
+          {filteredProducts.length === 0 ? (
+            <div className="p-8 sm:p-12 text-center">
+              <p className="text-2xl mb-2">📦</p>
+              <p className="text-gray-500">No products found. Try a different search or add a new product.</p>
+            </div>
+          ) : (
+            <>
+              {/* Desktop View */}
+              <div className="hidden sm:block overflow-x-auto">
+                <table className="w-full">
+                  <thead className="bg-gradient-to-r from-beige/30 to-beige/20 border-b-2 border-beige/40">
+                    <tr>
+                      <th scope="col" className="px-6 py-4 text-left text-xs font-bold text-soft-brown uppercase tracking-wider">Image</th>
+                      <th scope="col" className="px-6 py-4 text-left text-xs font-bold text-soft-brown uppercase tracking-wider">Name</th>
+                      <th scope="col" className="px-6 py-4 text-left text-xs font-bold text-soft-brown uppercase tracking-wider">Category</th>
+                      <th scope="col" className="px-6 py-4 text-left text-xs font-bold text-soft-brown uppercase tracking-wider">Price</th>
+                      <th scope="col" className="px-6 py-4 text-left text-xs font-bold text-soft-brown uppercase tracking-wider">Stock</th>
+                      <th scope="col" className="px-6 py-4 text-left text-xs font-bold text-soft-brown uppercase tracking-wider">New</th>
+                      <th scope="col" className="px-6 py-4 text-left text-xs font-bold text-soft-brown uppercase tracking-wider">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-beige/30">
+                    {filteredProducts.map((product) => (
+                      <tr key={product.id} className="hover:bg-muted-pink/20 transition-all duration-200 group">
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          {product.image ? (
+                            <img src={product.image} alt={product.name} className="h-14 w-14 object-cover rounded-lg border border-beige/40 shadow-sm group-hover:shadow-md transition-all" loading="lazy" />
+                          ) : (
+                            <div className="h-14 w-14 bg-gradient-to-br from-beige/40 to-beige/20 rounded-lg border-2 border-dashed border-beige/40 flex items-center justify-center group-hover:border-accent-red/40 transition-colors">
+                              <span className="text-xs text-soft-brown/60">No img</span>
+                            </div>
+                          )}
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="space-y-1 min-w-0">
+                            <p className="font-semibold text-soft-brown truncate">{product.name || 'Untitled'}</p>
+                            <p className="text-xs text-gray-500 truncate">{product.description}</p>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <select
+                            value={product.category}
+                            onChange={(e) => updateProduct(product.id, { category: e.target.value })}
+                            className="text-sm rounded-lg border border-beige/60 bg-white/90 hover:bg-white hover:border-accent-red/40 px-3 py-2 text-gray-700 shadow-sm focus:border-accent-red focus:ring-1 focus:ring-accent-red/30 transition-all"
+                          >
+                            <option value="Bouquet">Bouquet</option>
+                            <option value="Keychain">Keychain</option>
+                            <option value="Accessory">Accessory</option>
+                          </select>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <input
+                            type="number"
+                            value={product.price}
+                            onChange={(e) => updateProduct(product.id, { price: e.target.value })}
+                            className="text-sm w-28 rounded-lg border border-beige/60 bg-white/90 hover:bg-white hover:border-accent-red/40 px-3 py-2 text-gray-700 shadow-sm focus:border-accent-red focus:ring-1 focus:ring-accent-red/30 transition-all font-medium"
+                          />
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <input
+                            type="number"
+                            value={product.stock}
+                            onChange={(e) => updateProduct(product.id, { stock: e.target.value })}
+                            className={`text-sm w-20 rounded-lg border-2 bg-white/90 hover:bg-white px-3 py-2 text-gray-700 shadow-sm focus:ring-1 focus:ring-accent-red/30 transition-all font-medium ${
+                              Number(product.stock) <= 5 
+                                ? 'border-accent-red/60 focus:border-accent-red' 
+                                : 'border-beige/60 hover:border-accent-red/40 focus:border-accent-red'
+                            }`}
+                          />
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <label className="flex items-center cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={product.isNew}
+                              onChange={(e) => updateProduct(product.id, { isNew: e.target.checked })}
+                              className="rounded border-beige/60 text-accent-red focus:ring-accent-red/40 cursor-pointer w-5 h-5"
+                            />
+                          </label>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="flex items-center gap-2">
+                            <button
+                              onClick={() => handleEditProduct(product)}
+                              className="px-3 py-1.5 rounded-lg bg-accent-red/10 text-accent-red hover:bg-accent-red/20 font-medium text-xs transition-all hover:shadow-md"
+                            >
+                              ✎ Edit
+                            </button>
+                            <button
+                              onClick={async () => {
+                                if (window.confirm('Delete this product?')) {
+                                  const imagePaths = [
+                                    product.image,
+                                    ...(Array.isArray(product.gallery) ? product.gallery : []),
+                                  ].filter(Boolean);
+
+                                  try {
+                                    if (imagePaths.length === 1) {
+                                      await deleteImage(imagePaths[0]);
+                                    } else if (imagePaths.length > 1) {
+                                      await deleteMultipleImages(imagePaths);
+                                    }
+                                  } catch (err) {
+                                    console.warn('Failed to delete images', err);
+                                  }
+
+                                  if (product.id) {
+                                    try {
+                                      await deleteProductApi(product.id);
+                                    } catch (err) {
+                                      console.warn('Failed to delete product', err);
+                                    }
+                                  }
+
+                                  removeProduct(product.id);
+                                }
+                              }}
+                              className="px-3 py-1.5 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 font-medium text-xs transition-all hover:shadow-md"
+                            >
+                              🗑 Delete
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Mobile View - Card Layout */}
+              <div className="sm:hidden space-y-4 p-4">
                 {filteredProducts.map((product) => (
-                  <tr key={product.id} className="hover:bg-muted-pink/10">
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      {product.image ? (
-                        <img src={product.image} alt={product.name} className="h-12 w-12 object-cover rounded-lg border border-beige/40" loading="lazy" />
-                      ) : (
-                        <div className="h-12 w-12 bg-beige/20 rounded-lg border border-beige/40 flex items-center justify-center">
-                          <span className="text-xs text-soft-brown/60">No img</span>
-                        </div>
-                      )}
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="space-y-1">
-                        <div className="text-sm font-medium text-soft-brown">{product.name || 'Untitled product'}</div>
-                        <div className="text-xs text-gray-500 max-w-xs truncate">{product.description}</div>
+                  <div key={product.id} className="rounded-2xl border-2 border-beige/40 bg-white p-4 space-y-3 hover:border-accent-red/40 transition-colors shadow-sm hover:shadow-md">
+                    <div className="flex items-start gap-3">
+                      <div className="flex-shrink-0">
+                        {product.image ? (
+                          <img src={product.image} alt={product.name} className="h-16 w-16 object-cover rounded-lg border border-beige/40 shadow-sm" loading="lazy" />
+                        ) : (
+                          <div className="h-16 w-16 bg-gradient-to-br from-beige/40 to-beige/20 rounded-lg border-2 border-dashed border-beige/40 flex items-center justify-center">
+                            <span className="text-xs text-soft-brown/60">No img</span>
+                          </div>
+                        )}
                       </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <select
-                        value={product.category}
-                        onChange={(e) => updateProduct(product.id, { category: e.target.value })}
-                        className="text-sm rounded-lg border border-beige/60 bg-white/80 px-2 py-1 text-gray-700 shadow-sm focus:border-accent-red focus:ring-1 focus:ring-accent-red/30"
-                      >
-                        <option value="Bouquet">Bouquet</option>
-                        <option value="Keychain">Keychain</option>
-                        <option value="Accessory">Accessory</option>
-                      </select>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <input
-                        type="number"
-                        value={product.price}
-                        onChange={(e) => updateProduct(product.id, { price: e.target.value })}
-                        className="text-sm w-24 rounded-lg border border-beige/60 bg-white/80 px-2 py-1 text-gray-700 shadow-sm focus:border-accent-red focus:ring-1 focus:ring-accent-red/30"
-                      />
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <input
-                        type="number"
-                        value={product.stock}
-                        onChange={(e) => updateProduct(product.id, { stock: e.target.value })}
-                        className={`text-sm w-16 rounded-lg border bg-white/80 px-2 py-1 text-gray-700 shadow-sm focus:ring-1 focus:ring-accent-red/30 ${
-                          Number(product.stock) <= 5 
-                            ? 'border-accent-red/40 focus:border-accent-red' 
-                            : 'border-beige/60 focus:border-accent-red'
-                        }`}
-                      />
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <label className="flex items-center">
+                      <div className="flex-1 min-w-0">
+                        <h3 className="text-sm font-semibold text-soft-brown truncate">{product.name}</h3>
+                        <p className="text-xs text-gray-500 line-clamp-2 mt-1">{product.description}</p>
+                        <div className="flex items-center gap-2 mt-2">
+                          <span className="text-xs font-medium px-2 py-1 rounded-full bg-beige/30 text-soft-brown">{product.category}</span>
+                          {product.isNew && <span className="text-xs font-bold px-2 py-1 rounded-full bg-accent-red/20 text-accent-red">🆕 New</span>}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2 pt-2 border-t border-beige/30">
+                      <div>
+                        <label className="text-xs font-semibold text-soft-brown/70 block mb-1">Price</label>
+                        <input
+                          type="number"
+                          value={product.price}
+                          onChange={(e) => updateProduct(product.id, { price: e.target.value })}
+                          className="w-full text-sm rounded-lg border border-beige/60 bg-white/90 hover:bg-white hover:border-accent-red/40 px-2 py-2 text-gray-700 shadow-sm focus:border-accent-red focus:ring-1 focus:ring-accent-red/30 transition-all"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-xs font-semibold text-soft-brown/70 block mb-1">Stock</label>
+                        <input
+                          type="number"
+                          value={product.stock}
+                          onChange={(e) => updateProduct(product.id, { stock: e.target.value })}
+                          className={`w-full text-sm rounded-lg border-2 bg-white/90 hover:bg-white px-2 py-2 text-gray-700 shadow-sm focus:ring-1 focus:ring-accent-red/30 transition-all font-medium ${
+                            Number(product.stock) <= 5 
+                              ? 'border-accent-red/60 focus:border-accent-red' 
+                              : 'border-beige/60 hover:border-accent-red/40 focus:border-accent-red'
+                          }`}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="space-y-2 pt-2 border-t border-beige/30">
+                      <div>
+                        <label className="text-xs font-semibold text-soft-brown/70 block mb-1">Category</label>
+                        <select
+                          value={product.category}
+                          onChange={(e) => updateProduct(product.id, { category: e.target.value })}
+                          className="w-full text-sm rounded-lg border border-beige/60 bg-white/90 hover:bg-white hover:border-accent-red/40 px-2 py-2 text-gray-700 shadow-sm focus:border-accent-red focus:ring-1 focus:ring-accent-red/30 transition-all"
+                        >
+                          <option value="Bouquet">Bouquet</option>
+                          <option value="Keychain">Keychain</option>
+                          <option value="Accessory">Accessory</option>
+                        </select>
+                      </div>
+                      
+                      <label className="flex items-center gap-2 cursor-pointer">
                         <input
                           type="checkbox"
                           checked={product.isNew}
                           onChange={(e) => updateProduct(product.id, { isNew: e.target.checked })}
-                          className="rounded border-beige/60 text-accent-red focus:ring-accent-red/40"
+                          className="rounded border-beige/60 text-accent-red focus:ring-accent-red/40 cursor-pointer w-4 h-4"
                         />
+                        <span className="text-xs font-medium text-soft-brown">Mark as New</span>
                       </label>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center gap-2">
-                        <button
-                          onClick={() => handleEditProduct(product)}
-                          className="text-xs text-accent-red hover:text-accent-red/80 font-medium"
-                        >
-                          Edit
-                        </button>
-                        <button
-                          onClick={async () => {
-                            if (window.confirm('Are you sure you want to delete this product?')) {
-                              const imagePaths = [
-                                product.image,
-                                ...(Array.isArray(product.gallery) ? product.gallery : []),
-                              ].filter(Boolean);
+                    </div>
 
-                              try {
-                                if (imagePaths.length === 1) {
-                                  await deleteImage(imagePaths[0]);
-                                } else if (imagePaths.length > 1) {
-                                  await deleteMultipleImages(imagePaths);
-                                }
-                              } catch (err) {
-                                console.warn('Failed to delete some product images', err);
+                    <div className="flex items-center gap-2 pt-2 border-t border-beige/30">
+                      <button
+                        onClick={() => handleEditProduct(product)}
+                        className="flex-1 px-4 py-2.5 rounded-lg bg-accent-red/10 text-accent-red hover:bg-accent-red/20 font-semibold text-sm transition-all hover:shadow-md"
+                      >
+                        ✎ Edit
+                      </button>
+                      <button
+                        onClick={async () => {
+                          if (window.confirm('Delete this product?')) {
+                            const imagePaths = [
+                              product.image,
+                              ...(Array.isArray(product.gallery) ? product.gallery : []),
+                            ].filter(Boolean);
+
+                            try {
+                              if (imagePaths.length === 1) {
+                                await deleteImage(imagePaths[0]);
+                              } else if (imagePaths.length > 1) {
+                                await deleteMultipleImages(imagePaths);
                               }
-
-                              if (product.id) {
-                                try {
-                                  await deleteProductApi(product.id);
-                                } catch (err) {
-                                  console.warn('Failed to delete product from Supabase', err);
-                                }
-                              }
-
-                              removeProduct(product.id);
+                            } catch (err) {
+                              console.warn('Failed to delete images', err);
                             }
-                          }}
-                          className="text-xs text-red-600 hover:text-red-800 font-medium"
-                        >
-                          Delete
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
+
+                            if (product.id) {
+                              try {
+                                await deleteProductApi(product.id);
+                              } catch (err) {
+                                console.warn('Failed to delete product', err);
+                              }
+                            }
+
+                            removeProduct(product.id);
+                          }
+                        }}
+                        className="flex-1 px-4 py-2.5 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 font-semibold text-sm transition-all hover:shadow-md"
+                      >
+                        🗑 Delete
+                      </button>
+                    </div>
+                  </div>
                 ))}
-              </tbody>
-            </table>
-          </div>
+              </div>
+            </>
+          )}
         </div>
       </section>
 
-      <section id="orders" className="bg-white rounded-3xl shadow-xl p-6 space-y-6 border border-beige/50">
-        <div>
-          <p className="text-xs uppercase tracking-[0.5em] text-soft-brown/60">Orders</p>
-          <h2 className="text-2xl font-semibold text-soft-brown">Recent Orders</h2>
-          <p className="text-sm text-gray-500">Guest and customer orders placed from the checkout page.</p>
+      <section id="orders" className="bg-white rounded-2xl sm:rounded-3xl shadow-xl p-3 sm:p-5 md:p-7 space-y-4 sm:space-y-6 border-2 border-beige/40">
+        <div className="space-y-1 sm:space-y-2">
+          <p className="text-xs uppercase tracking-[0.6em] text-accent-red font-semibold">Orders</p>
+          <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-soft-brown">Recent Orders</h2>
+          <p className="text-sm text-gray-600">Guest and customer orders placed from the checkout page.</p>
         </div>
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <span className="text-sm text-soft-brown">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-6 text-xs sm:text-sm">
+            <span className="text-soft-brown font-medium">
               {ordersState.items.length} total orders
             </span>
-            <span className="text-sm text-muted-pink">
+            <span className="text-muted-pink font-medium">
               {ordersState.items.filter(order => order.status === 'pending').length} pending
             </span>
           </div>
           <a
             href="/orders"
-            className="inline-flex items-center rounded-full bg-accent-red px-4 py-2 text-sm text-white font-semibold shadow-md hover:-translate-y-0.5 transition"
+            className="inline-flex items-center rounded-full bg-accent-red px-4 sm:px-6 py-2.5 sm:py-2 text-xs sm:text-sm text-white font-semibold shadow-md hover:bg-red-700 active:bg-red-800 transition"
           >
-            View Detailed Orders
+            View Detailed Orders →
           </a>
         </div>
         {ordersState.error && (
@@ -729,131 +991,222 @@ const AdminPage = () => {
         ) : ordersState.items.length === 0 ? (
           <p className="text-sm text-gray-500">No orders have been placed yet.</p>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="min-w-full text-sm">
-              <thead>
-                <tr className="border-b border-beige/60 text-left text-xs uppercase tracking-[0.2em] text-soft-brown/70">
-                  <th className="py-2 pr-4">Date</th>
-                  <th className="py-2 pr-4">Order ID</th>
-                  <th className="py-2 pr-4">Customer</th>
-                  <th className="py-2 pr-4">Email</th>
-                  <th className="py-2 pr-4 text-right">Total</th>
-                  <th className="py-2 pr-4">Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {ordersState.items.map((order) => (
-                  <tr key={order.id} className="border-b border-beige/40 last:border-b-0">
-                    <td className="py-2 pr-4 whitespace-nowrap">
-                      {new Date(order.created_at).toLocaleString()}
-                    </td>
-                    <td className="py-2 pr-4 text-xs text-gray-600 break-all max-w-[160px]">
-                      {order.id}
-                    </td>
-                    <td className="py-2 pr-4">
-                      {order.shipping_address?.name || 'Guest'}
-                    </td>
-                    <td className="py-2 pr-4 text-xs text-gray-600 break-all max-w-[180px]">
-                      {order.email}
-                    </td>
-                    <td className="py-2 pr-4 text-right">
-                      ₱{Number(order.total || 0).toFixed(2)}
-                    </td>
-                    <td className="py-2 pr-4">
-                      <span className="inline-flex items-center rounded-full bg-muted-pink/30 px-3 py-1 text-xs font-medium text-soft-brown">
-                        {order.status}
-                      </span>
-                    </td>
+          <div className="overflow-hidden rounded-2xl border-2 border-beige/40 bg-white shadow-lg">
+            {/* Desktop View */}
+            <div className="hidden sm:block overflow-x-auto">
+              <table className="min-w-full text-sm">
+                <thead>
+                  <tr className="border-b-2 border-beige/40 bg-gradient-to-r from-beige/30 to-beige/20 text-left text-xs uppercase tracking-wider font-bold text-soft-brown">
+                    <th className="px-6 py-4">Date</th>
+                    <th className="px-6 py-4">Order ID</th>
+                    <th className="px-6 py-4">Customer</th>
+                    <th className="px-6 py-4 hidden md:table-cell">Email</th>
+                    <th className="px-6 py-4 text-right">Total</th>
+                    <th className="px-6 py-4">Status</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody className="divide-y divide-beige/30">
+                  {ordersState.items.map((order) => (
+                    <tr key={order.id} className="hover:bg-muted-pink/20 transition-colors group">
+                      <td className="px-6 py-4 whitespace-nowrap text-xs sm:text-sm font-medium text-soft-brown/80">
+                        {new Date(order.created_at).toLocaleDateString('en-US', { 
+                          year: 'numeric',
+                          month: 'short',
+                          day: 'numeric'
+                        })}
+                      </td>
+                      <td className="px-6 py-4 text-xs text-gray-600 font-mono max-w-[100px] truncate group-hover:text-soft-brown">
+                        #{order.id.substring(0, 8)}
+                      </td>
+                      <td className="px-6 py-4 text-xs sm:text-sm font-semibold text-soft-brown">
+                        {order.shipping_address?.name || '👤 Guest'}
+                      </td>
+                      <td className="px-6 py-4 text-xs text-gray-600 hidden md:table-cell max-w-[150px] truncate">
+                        {order.email || '—'}
+                      </td>
+                      <td className="px-6 py-4 text-right text-xs sm:text-sm font-bold text-accent-red">
+                        ₱{Number(order.total || 0).toFixed(2)}
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className={`inline-flex items-center rounded-full px-3 py-1.5 text-xs font-bold transition-colors ${
+                          order.status === 'completed' ? 'bg-green-100 text-green-700' :
+                          order.status === 'pending' ? 'bg-yellow-100 text-yellow-700' :
+                          order.status === 'cancelled' ? 'bg-red-100 text-red-700' :
+                          'bg-muted-pink/30 text-soft-brown'
+                        }`}>
+                          {order.status === 'completed' ? '✓ Completed' :
+                           order.status === 'pending' ? '⏳ Pending' :
+                           order.status === 'cancelled' ? '✕ Cancelled' :
+                           order.status}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Mobile View - Card Layout */}
+            <div className="sm:hidden space-y-4 p-4">
+              {ordersState.items.map((order) => (
+                <div key={order.id} className="rounded-2xl border-2 border-beige/40 bg-white p-4 space-y-3 hover:border-accent-red/40 transition-colors shadow-sm hover:shadow-md">
+                  <div className="flex justify-between items-start gap-3">
+                    <div className="flex-1">
+                      <p className="text-xs text-soft-brown/70 font-semibold uppercase tracking-wide mb-1">Order ID</p>
+                      <p className="text-xs text-gray-700 font-mono">{order.id.substring(0, 12)}...</p>
+                    </div>
+                    <span className={`inline-flex items-center rounded-full px-3 py-1.5 text-xs font-bold flex-shrink-0 transition-colors ${
+                      order.status === 'completed' ? 'bg-green-100 text-green-700' :
+                      order.status === 'pending' ? 'bg-yellow-100 text-yellow-700' :
+                      order.status === 'cancelled' ? 'bg-red-100 text-red-700' :
+                      'bg-muted-pink/30 text-soft-brown'
+                    }`}>
+                      {order.status === 'completed' ? '✓' :
+                       order.status === 'pending' ? '⏳' :
+                       order.status === 'cancelled' ? '✕' :
+                       '•'} {order.status}
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3 text-xs pt-2 border-t border-beige/30">
+                    <div>
+                      <p className="text-soft-brown/70 font-semibold mb-1">Date</p>
+                      <p className="text-gray-700">{new Date(order.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</p>
+                    </div>
+                    <div>
+                      <p className="text-soft-brown/70 font-semibold mb-1">Total</p>
+                      <p className="text-gray-700 font-bold text-accent-red">₱{Number(order.total || 0).toFixed(2)}</p>
+                    </div>
+                  </div>
+                  <div className="space-y-2 pt-2 border-t border-beige/30">
+                    <div>
+                      <p className="text-soft-brown/70 font-semibold text-xs mb-1">Customer</p>
+                      <p className="text-gray-700 text-xs font-medium">{order.shipping_address?.name || '👤 Guest'}</p>
+                    </div>
+                    <div>
+                      <p className="text-soft-brown/70 font-semibold text-xs mb-1">Email</p>
+                      <p className="text-gray-700 text-xs break-all">{order.email || '—'}</p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         )}
       </section>
 
-      <section id="storage" className="bg-white rounded-3xl shadow-xl p-6 space-y-6 border border-beige/50">
-        <h2 className="text-2xl font-semibold text-soft-brown">Storage Management</h2>
+      <section id="storage" className="bg-gradient-to-br from-white to-beige/10 rounded-2xl sm:rounded-3xl shadow-xl p-3 sm:p-5 md:p-7 space-y-4 sm:space-y-6 border-2 border-beige/40">
+        <div className="space-y-2">
+          <p className="text-xs uppercase tracking-[0.6em] text-accent-red font-semibold">Storage</p>
+          <h2 className="text-3xl sm:text-4xl font-bold text-soft-brown">Storage Management</h2>
+        </div>
         
-        <div className="rounded-lg bg-beige/20 border border-beige/40 p-4">
-          <p className="text-sm text-gray-700">
-            <strong>📦 Supabase Free Tier:</strong> 1 GB per project | 
-            <strong> Current Usage:</strong> {storageStats.sizeInGB} GB / 1 GB
+        <div className="rounded-2xl bg-gradient-to-r from-beige/30 to-beige/20 border-2 border-beige/40 p-4 sm:p-6 space-y-3">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <p className="text-xs sm:text-sm font-semibold text-soft-brown/70 uppercase tracking-wide mb-1">📦 Supabase Free Tier</p>
+              <p className="text-lg sm:text-xl font-bold text-soft-brown">1 GB Total</p>
+            </div>
+            {storageStats.usageWarning && (
+              <div className="px-3 py-1.5 rounded-full bg-amber-100 border border-amber-300">
+                <p className="text-xs font-bold text-amber-800">⚠️ {storageStats.usageWarning}</p>
+              </div>
+            )}
+          </div>
+          <div className="relative h-2 bg-beige/40 rounded-full overflow-hidden">
+            <div 
+              className="h-full bg-gradient-to-r from-accent-red/60 to-accent-red transition-all duration-500"
+              style={{ width: `${Math.min((storageStats.sizeInGB / 1) * 100, 100)}%` }}
+            ></div>
+          </div>
+          <p className="text-xs text-gray-600 font-medium">
+            <strong>Current Usage:</strong> {storageStats.sizeInGB} GB / 1 GB ({Math.round((storageStats.sizeInGB / 1) * 100)}%)
           </p>
-          {storageStats.usageWarning && (
-            <p className="text-sm text-amber-700 mt-2">
-              ⚠️ <strong>{storageStats.usageWarning}</strong> — Consider clearing unused files.
-            </p>
-          )}
         </div>
         
         <div className="grid gap-4 sm:grid-cols-3">
-          <div className="rounded-2xl bg-gradient-to-br from-muted-pink/20 to-beige/20 p-4 space-y-2">
-            <p className="text-sm font-medium text-soft-brown/70">Total Files</p>
-            <p className="text-3xl font-bold text-soft-brown">{storageStats.files}</p>
+          <div className="rounded-2xl bg-gradient-to-br from-muted-pink/20 to-muted-pink/5 border-2 border-muted-pink/40 p-4 sm:p-6 space-y-3 hover:border-muted-pink/60 transition-colors group">
+            <div className="flex items-start justify-between">
+              <p className="text-xs font-bold text-soft-brown/70 uppercase tracking-wider">📁 Files</p>
+              <span className="text-2xl">📄</span>
+            </div>
+            <p className="text-4xl sm:text-5xl font-bold text-soft-brown group-hover:text-accent-red transition-colors">{storageStats.files}</p>
+            <p className="text-xs text-gray-600">total files</p>
           </div>
           
-          <div className="rounded-2xl bg-gradient-to-br from-accent-red/10 to-beige/20 p-4 space-y-2">
-            <p className="text-sm font-medium text-soft-brown/70">Storage Used</p>
-            <p className="text-2xl font-bold text-soft-brown">{storageStats.sizeInMB} <span className="text-lg">MB</span></p>
-            <p className="text-xs text-gray-600">{storageStats.sizeInGB} GB</p>
+          <div className="rounded-2xl bg-gradient-to-br from-accent-red/15 to-accent-red/5 border-2 border-accent-red/40 p-4 sm:p-6 space-y-3 hover:border-accent-red/60 transition-colors group">
+            <div className="flex items-start justify-between">
+              <p className="text-xs font-bold text-soft-brown/70 uppercase tracking-wider">💾 Used</p>
+              <span className="text-2xl">📦</span>
+            </div>
+            <p className="text-3xl sm:text-4xl font-bold text-accent-red">{storageStats.sizeInMB} <span className="text-lg">MB</span></p>
+            <p className="text-sm font-semibold text-gray-600">{storageStats.sizeInGB} GB</p>
           </div>
           
-          <div className="rounded-2xl bg-gradient-to-br from-beige/30 to-beige/10 p-4 space-y-2">
-            <p className="text-sm font-medium text-soft-brown/70">Bucket Limit</p>
-            <p className="text-2xl font-bold text-soft-brown">1 <span className="text-lg">GB</span></p>
-            <p className="text-xs text-gray-600">Free tier quota</p>
+          <div className="rounded-2xl bg-gradient-to-br from-beige/30 to-beige/10 border-2 border-beige/40 p-4 sm:p-6 space-y-3 hover:border-beige/60 transition-colors group">
+            <div className="flex items-start justify-between">
+              <p className="text-xs font-bold text-soft-brown/70 uppercase tracking-wider">📊 Limit</p>
+              <span className="text-2xl">🎯</span>
+            </div>
+            <p className="text-3xl sm:text-4xl font-bold text-soft-brown">1 <span className="text-lg">GB</span></p>
+            <p className="text-xs text-gray-600">Free tier</p>
           </div>
         </div>
 
         {storageError && (
-          <div className="rounded-lg bg-red-50 border border-red-200 p-4">
-            <p className="text-sm text-red-800">{storageError}</p>
+          <div className="rounded-2xl bg-red-50 border-2 border-red-200 p-4 sm:p-6">
+            <p className="text-xs sm:text-sm text-red-800 font-semibold">❌ {storageError}</p>
           </div>
         )}
 
-        <div className="space-y-4">
+        <div className="space-y-4 pt-4 border-t-2 border-beige/30">
           <button
             onClick={loadStorageStats}
             disabled={storageLoading}
-            className="inline-flex items-center gap-2 rounded-full bg-accent-red/10 text-accent-red px-4 py-2 text-sm font-semibold hover:bg-accent-red/20 transition disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-lg bg-accent-red/10 hover:bg-accent-red/20 text-accent-red px-6 py-3 text-sm font-semibold transition-all hover:shadow-md active:bg-accent-red/30 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {storageLoading ? 'Refreshing...' : 'Refresh Stats'}
+            {storageLoading ? '⏳ Refreshing...' : '🔄 Refresh Stats'}
           </button>
 
-          <div className="pt-4 border-t border-beige/40">
-            <h3 className="font-semibold text-soft-brown mb-3">Clear Storage</h3>
-            <p className="text-sm text-gray-600 mb-4">
-              Permanently delete all product images from storage. This action cannot be undone.
-            </p>
+          <div className="pt-6 border-t-2 border-beige/30 space-y-4">
+            <div>
+              <h3 className="font-bold text-soft-brown text-sm uppercase tracking-wide">🗑️ Clear All Storage</h3>
+              <p className="text-xs sm:text-sm text-gray-600 mt-2 leading-relaxed">
+                Permanently delete all {storageStats.files} product image(s). This action cannot be undone and will free up {storageStats.sizeInMB} MB of storage.
+              </p>
+            </div>
             
             {!storageClearConfirm ? (
               <button
                 onClick={() => setStorageClearConfirm(true)}
                 disabled={storageLoading || storageStats.files === 0}
-                className="rounded-full bg-red-500 text-white px-4 py-2 text-sm font-semibold hover:bg-red-600 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full rounded-lg bg-red-50 hover:bg-red-100 text-red-700 px-6 py-3 text-sm font-bold border-2 border-red-200 hover:border-red-400 transition-all hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Delete All Files ({storageStats.files})
+                🗑️ Delete All {storageStats.files} File(s)
               </button>
             ) : (
-              <div className="rounded-lg bg-red-50 border border-red-200 p-4 space-y-3">
-                <p className="text-sm font-medium text-red-800">
-                  ⚠️ Are you sure? This will permanently delete {storageStats.files} file(s) ({storageStats.sizeInMB} MB).
-                </p>
-                <div className="flex gap-3">
+              <div className="rounded-2xl bg-red-50 border-2 border-red-300 p-4 sm:p-6 space-y-4">
+                <div className="space-y-2">
+                  <p className="text-sm font-bold text-red-800">
+                    ⚠️ Confirm Deletion
+                  </p>
+                  <p className="text-xs sm:text-sm text-red-700 leading-relaxed">
+                    You are about to permanently delete <strong>{storageStats.files}</strong> file(s) totaling <strong>{storageStats.sizeInMB} MB</strong>. This action is <strong>irreversible</strong> and cannot be recovered.
+                  </p>
+                </div>
+                <div className="flex gap-3 flex-col sm:flex-row">
                   <button
                     onClick={handleClearStorage}
                     disabled={storageLoading}
-                    className="rounded-full bg-red-600 text-white px-4 py-2 text-sm font-semibold hover:bg-red-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="flex-1 rounded-lg bg-red-600 hover:bg-red-700 text-white px-4 py-3 text-sm font-bold transition-all hover:shadow-md active:bg-red-800 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    {storageLoading ? 'Deleting...' : 'Yes, Delete All'}
+                    {storageLoading ? '⏳ Deleting...' : '✓ Yes, Delete All Files'}
                   </button>
                   <button
                     onClick={() => setStorageClearConfirm(false)}
                     disabled={storageLoading}
-                    className="rounded-full border border-red-200 text-red-700 px-4 py-2 text-sm font-semibold hover:bg-red-50 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="flex-1 rounded-lg border-2 border-red-300 bg-white hover:bg-red-50 text-red-700 px-4 py-3 text-sm font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    Cancel
+                    ✕ Cancel
                   </button>
                 </div>
               </div>
@@ -865,122 +1218,142 @@ const AdminPage = () => {
       </div>
 
       {showAddPanel && (
-        <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/40 px-4">
-          <div className="w-full max-w-2xl rounded-3xl bg-white p-6 shadow-2xl relative">
+        <div className="fixed inset-0 z-40 flex items-end sm:items-center justify-center bg-black/40 p-0 sm:p-4 py-4 sm:py-0">
+          <div className="w-full max-w-2xl rounded-t-3xl sm:rounded-3xl bg-white p-4 sm:p-6 shadow-2xl relative max-h-[85vh] sm:max-h-[90vh] overflow-y-auto">
             <button
               onClick={() => setShowAddPanel(false)}
-              className="absolute right-4 top-4 text-soft-brown hover:text-accent-red"
+              className="absolute right-4 top-4 text-soft-brown hover:text-accent-red transition p-1 hover:bg-muted-pink/20 rounded-lg"
               aria-label="Close add product dialog"
             >
-              ✕
+              <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
             </button>
-            <h3 className="text-2xl font-semibold text-soft-brown mb-4">Add New Product</h3>
-            <form className="grid gap-4 md:grid-cols-2" onSubmit={handleAddProduct}>
+            <h3 className="text-xl sm:text-2xl font-semibold text-soft-brown mb-4 sm:mb-6 pr-8">Add New Product</h3>
+            <form className="grid gap-3 sm:gap-4 md:grid-cols-2" onSubmit={handleAddProduct}>
               <TextField label="Name" value={newProduct.name} onChange={(value) => handleNewProductChange('name', value)} />
               <TextField
                 label="Price"
                 value={newProduct.price}
                 onChange={(value) => handleNewProductChange('price', value)}
               />
-              <TextField
-                label="Image URL"
-                value={newProduct.image}
-                onChange={(value) => handleNewProductChange('image', value)}
-              />
               <label className="text-sm font-medium text-soft-brown">
-                <span>Upload image</span>
+                <span>Main Image URL</span>
+                <input
+                  type="text"
+                  value={newProduct.image}
+                  onChange={(value) => handleNewProductChange('image', value)}
+                  placeholder="https://..."
+                  className="mt-2 w-full rounded-lg sm:rounded-xl border border-beige/70 bg-white/80 px-3.5 sm:px-3 py-3 sm:py-2 text-base sm:text-sm text-gray-700 shadow-sm focus:border-accent-red focus:ring-2 focus:ring-accent-red/30"
+                />
+              </label>
+              <label className="text-sm font-medium text-soft-brown">
+                <span>Upload Main Image</span>
                 <input
                   type="file"
                   accept="image/*"
                   onChange={(e) => handleImageUpload(e.target.files?.[0], (data) => handleNewProductChange('image', data), 'new-product-image')}
                   disabled={uploadingImages['new-product-image']}
-                  className="mt-1 w-full rounded-xl border border-dashed border-beige/70 bg-white/50 px-3 py-2 text-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="mt-2 w-full rounded-lg sm:rounded-xl border border-dashed border-beige/70 bg-white/50 px-3.5 sm:px-3 py-3 sm:py-2 text-xs sm:text-sm text-gray-600 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-muted-pink/5 transition"
                 />
                 {uploadingImages['new-product-image'] && (
-                  <p className="text-xs text-soft-brown/70 mt-1">Uploading...</p>
+                  <p className="text-xs text-accent-red mt-2 font-medium">Uploading...</p>
                 )}
-                <button
-                  type="button"
-                  onClick={() => openImageLibrary({ type: 'new', productId: null })}
-                  className="mt-2 inline-flex items-center text-xs text-soft-brown hover:text-accent-red"
-                >
-                  Browse library
-                </button>
               </label>
-              <div className="md:col-span-2 grid gap-3 sm:grid-cols-3">
-                {new Array(3).fill(0).map((_, index) => (
-                  <label key={index} className="text-sm font-medium text-soft-brown">
-                    <span>Gallery {index + 1}</span>
-                    <input
-                      type="text"
-                      value={newProduct.gallery?.[index] || ''}
-                      onChange={(e) => handleNewProductGalleryChange(index, e.target.value)}
-                      className="mt-1 w-full rounded-xl border border-beige/70 bg-white/80 px-3 py-2 text-gray-700 shadow-sm"
-                    />
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={(e) => handleImageUpload(e.target.files?.[0], (data) => handleNewProductGalleryChange(index, data), `new-product-gallery-${index}`)}
-                      disabled={uploadingImages[`new-product-gallery-${index}`]}
-                      className="mt-1 w-full rounded-xl border border-dashed border-beige/70 bg-white/50 px-3 py-2 text-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
-                    />
-                    {uploadingImages[`new-product-gallery-${index}`] && (
-                      <p className="text-xs text-soft-brown/70 mt-1">Uploading...</p>
-                    )}
-                  </label>
-                ))}
+              <button
+                type="button"
+                onClick={() => openImageLibrary({ type: 'new', productId: null })}
+                className="md:col-span-2 inline-flex items-center text-xs sm:text-sm text-accent-red hover:text-accent-red/80 font-medium transition rounded-lg px-3 py-2 hover:bg-accent-red/5 active:bg-accent-red/10"
+              >
+                📁 Browse image library
+              </button>
+
+              <div className="md:col-span-2">
+                <h4 className="text-sm font-semibold text-soft-brown mb-3">Gallery Images (Optional)</h4>
+                <div className="grid gap-3 sm:grid-cols-3">
+                  {new Array(3).fill(0).map((_, index) => (
+                    <div key={index} className="space-y-2">
+                      <label className="text-xs font-medium text-soft-brown">
+                        <span>Image {index + 1}</span>
+                      </label>
+                      <input
+                        type="text"
+                        value={newProduct.gallery?.[index] || ''}
+                        onChange={(e) => handleNewProductGalleryChange(index, e.target.value)}
+                        placeholder="URL or upload below"
+                        className="w-full rounded-lg border border-beige/70 bg-white/80 px-3 py-2 text-xs text-gray-700 shadow-sm focus:border-accent-red focus:ring-2 focus:ring-accent-red/30"
+                      />
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => handleImageUpload(e.target.files?.[0], (data) => handleNewProductGalleryChange(index, data), `new-product-gallery-${index}`)}
+                        disabled={uploadingImages[`new-product-gallery-${index}`]}
+                        className="w-full rounded-lg border border-dashed border-beige/70 bg-white/50 px-3 py-2 text-xs text-gray-600 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-muted-pink/5 transition"
+                      />
+                      {uploadingImages[`new-product-gallery-${index}`] && (
+                        <p className="text-xs text-accent-red font-medium">Uploading...</p>
+                      )}
+                    </div>
+                  ))}
+                </div>
               </div>
-              <TextField label="Stock" value={newProduct.stock} onChange={(value) => handleNewProductChange('stock', value)} />
+
+              <TextField label="Stock Quantity" value={newProduct.stock} onChange={(value) => handleNewProductChange('stock', value)} />
               <label className="text-sm font-medium text-soft-brown">
                 <span>Category</span>
                 <select
                   value={newProduct.category}
                   onChange={(e) => handleNewProductChange('category', e.target.value)}
-                  className="mt-1 w-full rounded-xl border border-beige/70 bg-white/80 px-3 py-2 text-gray-700 shadow-sm focus:border-accent-red focus:ring-2 focus:ring-accent-red/30"
+                  className="mt-2 w-full rounded-xl border border-beige/70 bg-white/80 px-3 py-3 sm:py-2 text-base sm:text-sm text-gray-700 shadow-sm focus:border-accent-red focus:ring-2 focus:ring-accent-red/30"
                 >
                   <option value="Bouquet">Bouquet</option>
                   <option value="Keychain">Keychain</option>
                   <option value="Accessory">Accessory</option>
                 </select>
               </label>
-              <div className="md:col-span-2 grid gap-3 sm:grid-cols-2">
-                <label className="flex items-center gap-3 text-sm font-medium text-soft-brown">
-                  <input
-                    type="checkbox"
-                    checked={newProduct.isNew}
-                    onChange={(e) => handleNewProductChange('isNew', e.target.checked)}
-                    className="rounded border-beige/60 text-accent-red focus:ring-accent-red/40"
-                  />
-                  New Arrival
-                </label>
-                <label className="flex items-center gap-3 text-sm font-medium text-soft-brown">
-                  <input
-                    type="checkbox"
-                    checked={newProduct.isLimitedStock}
-                    onChange={(e) => handleNewProductChange('isLimitedStock', e.target.checked)}
-                    className="rounded border-beige/60 text-accent-red focus:ring-accent-red/40"
-                  />
-                  Limited Stocks Only
-                </label>
-                <label className="flex items-center gap-3 text-sm font-medium text-soft-brown">
-                  <input
-                    type="checkbox"
-                    checked={newProduct.isFeatured}
-                    onChange={(e) => handleNewProductChange('isFeatured', e.target.checked)}
-                    className="rounded border-beige/60 text-accent-red focus:ring-accent-red/40"
-                  />
-                  Featured Product
-                </label>
-                <label className="flex items-center gap-3 text-sm font-medium text-soft-brown">
-                  <input
-                    type="checkbox"
-                    checked={newProduct.isOnSale}
-                    onChange={(e) => handleNewProductChange('isOnSale', e.target.checked)}
-                    className="rounded border-beige/60 text-accent-red focus:ring-accent-red/40"
-                  />
-                  On Sale
-                </label>
+              
+              <div className="md:col-span-2">
+                <h4 className="text-sm font-semibold text-soft-brown mb-3">Product Flags</h4>
+                <div className="grid gap-2 sm:grid-cols-2">
+                  <label className="flex items-center gap-3 text-sm font-medium text-soft-brown cursor-pointer hover:bg-muted-pink/10 p-2 rounded-lg transition">
+                    <input
+                      type="checkbox"
+                      checked={newProduct.isNew}
+                      onChange={(e) => handleNewProductChange('isNew', e.target.checked)}
+                      className="rounded border-beige/60 text-accent-red focus:ring-accent-red/40 cursor-pointer"
+                    />
+                    <span>🆕 New Arrival</span>
+                  </label>
+                  <label className="flex items-center gap-3 text-sm font-medium text-soft-brown cursor-pointer hover:bg-muted-pink/10 p-2 rounded-lg transition">
+                    <input
+                      type="checkbox"
+                      checked={newProduct.isLimitedStock}
+                      onChange={(e) => handleNewProductChange('isLimitedStock', e.target.checked)}
+                      className="rounded border-beige/60 text-accent-red focus:ring-accent-red/40 cursor-pointer"
+                    />
+                    <span>📦 Limited Stock</span>
+                  </label>
+                  <label className="flex items-center gap-3 text-sm font-medium text-soft-brown cursor-pointer hover:bg-muted-pink/10 p-2 rounded-lg transition">
+                    <input
+                      type="checkbox"
+                      checked={newProduct.isFeatured}
+                      onChange={(e) => handleNewProductChange('isFeatured', e.target.checked)}
+                      className="rounded border-beige/60 text-accent-red focus:ring-accent-red/40 cursor-pointer"
+                    />
+                    <span>⭐ Featured</span>
+                  </label>
+                  <label className="flex items-center gap-3 text-sm font-medium text-soft-brown cursor-pointer hover:bg-muted-pink/10 p-2 rounded-lg transition">
+                    <input
+                      type="checkbox"
+                      checked={newProduct.isOnSale}
+                      onChange={(e) => handleNewProductChange('isOnSale', e.target.checked)}
+                      className="rounded border-beige/60 text-accent-red focus:ring-accent-red/40 cursor-pointer"
+                    />
+                    <span>🔥 On Sale</span>
+                  </label>
+                </div>
               </div>
+
               <div className="md:col-span-2">
                 <TextField
                   label="Description"
@@ -989,12 +1362,23 @@ const AdminPage = () => {
                   textarea
                 />
               </div>
-              {formError && <p className="text-sm text-red-500 md:col-span-2">{formError}</p>}
-              <div className="md:col-span-2 flex justify-end gap-3">
-                <button type="button" onClick={() => setShowAddPanel(false)} className="rounded-full border border-beige/60 px-4 py-2 text-soft-brown">
+              
+              {formError && <p className="text-xs sm:text-sm text-red-500 md:col-span-2 bg-red-50/50 p-3 rounded-lg font-medium">{formError}</p>}
+              
+              <div className="md:col-span-2 flex flex-col-reverse sm:flex-row justify-end gap-2.5 sm:gap-3 pt-2 border-t border-beige/40">
+                <button 
+                  type="button" 
+                  onClick={() => setShowAddPanel(false)} 
+                  className="rounded-full border border-beige/60 px-4 py-2.5 sm:py-2 text-sm font-semibold text-soft-brown hover:bg-beige/20 active:bg-beige/40 transition"
+                >
                   Cancel
                 </button>
-                <button type="submit" className="btn-primary">Save Product</button>
+                <button 
+                  type="submit" 
+                  className="rounded-full bg-accent-red px-6 py-2.5 sm:py-2 text-sm font-semibold text-white hover:bg-red-700 active:bg-red-800 transition shadow-md"
+                >
+                  Save Product
+                </button>
               </div>
             </form>
           </div>
@@ -1002,51 +1386,62 @@ const AdminPage = () => {
       )}
 
       {showImageLibrary && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
-          <div className="w-full max-w-3xl rounded-3xl bg-white p-6 shadow-2xl relative max-h-[80vh] overflow-hidden flex flex-col">
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 p-0 sm:p-4 py-4 sm:py-0">
+          <div className="w-full max-w-3xl rounded-t-3xl sm:rounded-3xl bg-white p-4 sm:p-6 shadow-2xl relative max-h-[85vh] sm:max-h-[90vh] overflow-hidden flex flex-col">
             <button
               onClick={() => setShowImageLibrary(false)}
-              className="absolute right-4 top-4 text-soft-brown hover:text-accent-red"
+              className="absolute right-4 top-4 text-soft-brown hover:text-accent-red transition p-1 hover:bg-muted-pink/20 rounded-lg z-10"
               aria-label="Close image library"
             >
-              ✕
+              <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
             </button>
-            <h3 className="text-2xl font-semibold text-soft-brown mb-4 pr-8">Image Library</h3>
+            <h3 className="text-xl sm:text-2xl font-semibold text-soft-brown mb-4 sm:mb-6 pr-8">📁 Image Library</h3>
             {imageLibrary.error && (
-              <p className="text-sm text-red-500 mb-3">{imageLibrary.error}</p>
+              <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+                <p className="text-sm text-red-700">{imageLibrary.error}</p>
+              </div>
             )}
             {imageLibrary.loading ? (
-              <p className="text-sm text-soft-brown">Loading images...</p>
+              <div className="flex items-center justify-center py-12">
+                <p className="text-sm text-soft-brown">Loading images...</p>
+              </div>
             ) : (
               <div className="flex-1 overflow-y-auto">
                 {imageLibrary.images.length === 0 ? (
-                  <p className="text-sm text-gray-500">No images found in storage yet.</p>
+                  <p className="text-sm text-gray-500 py-8 text-center">No images found in storage yet.</p>
                 ) : (
-                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 sm:gap-3 md:gap-4">
                     {imageLibrary.images.map((url) => (
                       <button
                         type="button"
                         key={url}
                         onClick={() => handleSelectLibraryImage(url)}
-                        className="group rounded-2xl border border-beige/60 overflow-hidden hover:border-accent-red focus:outline-none focus:ring-2 focus:ring-accent-red/40"
+                        className="group rounded-2xl border-2 border-beige/60 overflow-hidden hover:border-accent-red focus:outline-none focus:ring-2 focus:ring-accent-red/40 transition active:scale-95"
                       >
-                        <img
-                          src={url}
-                          alt="Product"
-                          className="w-full h-32 object-cover group-hover:scale-105 transition-transform"
-                          loading="lazy"
-                        />
+                        <div className="relative bg-beige/20 overflow-hidden">
+                          <img
+                            src={url}
+                            alt="Product gallery"
+                            className="w-full h-24 sm:h-32 object-cover group-hover:scale-110 transition-transform duration-200"
+                            loading="lazy"
+                          />
+                          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition flex items-center justify-center group-hover:opacity-100 opacity-0">
+                            <span className="text-white text-xl">✓</span>
+                          </div>
+                        </div>
                       </button>
                     ))}
                   </div>
                 )}
               </div>
             )}
-            <div className="mt-4 flex justify-end">
+            <div className="mt-4 pt-4 border-t border-beige/40 flex justify-end">
               <button
                 type="button"
                 onClick={() => setShowImageLibrary(false)}
-                className="rounded-full border border-beige/60 px-4 py-2 text-soft-brown"
+                className="rounded-full border border-beige/60 px-4 sm:px-6 py-2.5 sm:py-2 text-sm font-semibold text-soft-brown hover:bg-beige/20 active:bg-beige/40 transition"
               >
                 Close
               </button>
@@ -1054,6 +1449,7 @@ const AdminPage = () => {
           </div>
         </div>
       )}
+      </div>
     </div>
   );
 };
