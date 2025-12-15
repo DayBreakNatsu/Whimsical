@@ -191,25 +191,32 @@ const ProductsPage = () => {
             </div>
 
             {/* Products Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl-grid-cols-4 gap-6">
-              {filteredProducts.map((product) => (
-                <div key={product.id} className="relative group">
-                  {product.stock !== undefined && (
-                    <span className="absolute top-3 left-3 z-10 rounded-full bg-white/95 px-3 py-1 text-xs font-semibold text-soft-brown shadow">
-                      Stock: {product.stock}
-                    </span>
-                  )}
-                  <button
-                    type="button"
-                    onClick={() => openProduct(product)}
-                    className="absolute top-3 right-3 z-10 rounded-full border border-soft-brown/20 bg-white px-3 py-1 text-xs font-semibold text-soft-brown shadow opacity-0 group-hover:opacity-100 focus-visible:opacity-100 transition"
-                    aria-label={`View details for ${product.name}`}
-                  >
-                    View
-                  </button>
-                  <ProductCard product={product} />
-                </div>
-              ))}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mt-8">
+                   {filteredProducts.map((product) => (
+                     <div key={product.id} className="relative group overflow-hidden">
+                       <div className="absolute top-3 left-3 z-20 flex flex-col gap-2">
+                         {product.isNew && (
+                           <span className="rounded-full bg-accent-red text-white px-3 py-1 text-xs font-semibold shadow">
+                             New
+                           </span>
+                         )}
+                         {product.stock !== undefined && (
+                           <span className="rounded-full bg-white/95 px-3 py-1 text-xs font-semibold text-soft-brown shadow">
+                             Stock: {product.stock}
+                           </span>
+                         )}
+                       </div>
+                       <button
+                         type="button"
+                         onClick={() => openProduct(product)}
+                         className="absolute top-3 right-3 z-20 rounded-full border border-soft-brown/20 bg-white px-3 py-1 text-xs font-semibold text-soft-brown shadow opacity-0 group-hover:opacity-100 focus-visible:opacity-100 transition"
+                         aria-label={`View details for ${product.name}`}
+                       >
+                         View
+                       </button>
+                       <ProductCard product={product} />
+                     </div>
+                   ))}
             </div>
             
             {filteredProducts.length === 0 && (

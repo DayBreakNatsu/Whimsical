@@ -38,12 +38,12 @@ const ProductCard = ({ product }) => {
   };
 
   return (
-    <div className="card transition-transform duration-200 hover:-translate-y-1">
+    <div className="bg-white rounded-2xl overflow-hidden border border-beige/30 shadow-sm hover:shadow-lg transition-transform transform hover:-translate-y-1">
       <div className="relative">
         <img
-          src={imageError ? 'https://via.placeholder.com/400x300/F5E6D3/8B4513?text=Whimsical+By+Achlys' : getImageUrl()}
+          src={imageError ? 'https://via.placeholder.com/600x420/F5E6D3/8B4513?text=Whimsical+By+Achlys' : getImageUrl()}
           alt={product.name}
-          className="w-full h-64 object-cover"
+          className="w-full h-56 md:h-64 lg:h-64 object-cover"
           loading="lazy"
           onError={handleImageError}
         />
@@ -91,22 +91,22 @@ const ProductCard = ({ product }) => {
         )}
       </div>
 
-      <div className="p-4 sm:p-5 space-y-3">
+      <div className="p-4 sm:p-5 space-y-3 min-h-[140px] flex flex-col justify-between">
         <div>
           <p className="text-xs uppercase tracking-[0.4em] text-soft-brown/70">{product.category}</p>
-          <h3 className="text-base sm:text-lg font-semibold text-soft-brown line-clamp-2">{product.name}</h3>
+          <h3 className="text-lg font-semibold text-soft-brown line-clamp-2 mt-1">{product.name}</h3>
+          <p className="text-sm text-gray-600 line-clamp-2 mt-2">{product.description}</p>
         </div>
-        <p className="text-sm text-gray-600 line-clamp-2">{product.description}</p>
 
-        <div className="flex items-center justify-between gap-3 pt-2">
+        <div className="flex items-center justify-between gap-3 pt-3">
           <span className="text-xl sm:text-2xl font-bold text-accent-red">{formatCurrency(product.price)}</span>
           <button
             onClick={handleAddToCart}
             disabled={isOutOfStock}
-            className={`rounded-full border border-accent-red/30 px-3 sm:px-4 py-2.5 sm:py-2 text-xs sm:text-sm font-semibold transition active:scale-95 ${
+            className={`rounded-full border border-accent-red/30 px-4 py-2 text-sm font-semibold transition active:scale-95 ${
               isOutOfStock
-                ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                : 'text-accent-red hover:bg-accent-red hover:text-white'
+                ? 'bg-gray-100 text-gray-500 cursor-not-allowed border-gray-200'
+                : 'text-white bg-accent-red hover:bg-red-700'
             }`}
           >
             {isOutOfStock ? 'Out of Stock' : 'Add to Cart'}

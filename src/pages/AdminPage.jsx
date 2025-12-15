@@ -3,6 +3,7 @@ import { useSiteContent, defaultContent } from '../context/SiteContentContext';
 import { uploadImage, deleteImage, deleteMultipleImages, listImages, getStorageStats, clearStorage } from '../services/storageService';
 import {
   createProduct as createProductApi,
+  updateProduct as updateProductApi,
   deleteProduct as deleteProductApi,
 } from '../services/productService';
 import { updateSiteSetting } from '../services/siteSettingsService';
@@ -41,7 +42,7 @@ const AdminPage = () => {
   const [isAuthed, setIsAuthed] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showAddPanel, setShowAddPanel] = useState(false);
-  // Product editing state managed via showProductModal state
+  const [editingProductId, setEditingProductId] = useState(null);
   const [productSearch, setProductSearch] = useState('');
   const [uploadingImages, setUploadingImages] = useState({});
   const [newProduct, setNewProduct] = useState({
@@ -248,6 +249,24 @@ const AdminPage = () => {
     setShowImageLibrary(false);
   };
 
+  const handleEditProduct = (product) => {
+    setEditingProductId(product.id);
+    setNewProduct({
+      name: product.name || '',
+      description: product.description || '',
+      price: product.price || '',
+      image: product.image || '',
+      gallery: Array.isArray(product.gallery) ? product.gallery : ['', '', ''],
+      category: product.category || 'Bouquet',
+      isNew: product.isNew || false,
+      isLimitedStock: product.isLimitedStock || false,
+      isFeatured: product.isFeatured || false,
+      isOnSale: product.isOnSale || false,
+      stock: product.stock || '',
+    });
+    setShowAddPanel(true);
+  };
+
   const handleAddProduct = async (e) => {
     e.preventDefault();
 
@@ -275,6 +294,48 @@ const AdminPage = () => {
       stock: Number(newProduct.stock) || 0,
     };
 
+    if (editingProductId) {
+      // Persist update to Supabase
+      const { data: updatedData, error: updateError } = await updateProductApi(editingProductId, supabaseProduct);
+      if (updateError) {
+        setFormError(updateError.error || 'Failed to update product in Supabase.');
+        return;
+      }
+
+      // Sync local site content state (use camelCase keys expected by context)
+      updateProduct(editingProductId, {
+        name: supabaseProduct.name,
+        description: supabaseProduct.description,
+        price: supabaseProduct.price,
+        image: supabaseProduct.image,
+        gallery: supabaseProduct.gallery,
+        category: supabaseProduct.category,
+        isNew: supabaseProduct.is_new,
+        isLimitedStock: supabaseProduct.is_limited_stock,
+        isFeatured: supabaseProduct.is_featured,
+        isOnSale: supabaseProduct.is_on_sale,
+        stock: supabaseProduct.stock,
+      });
+
+      setEditingProductId(null);
+      setShowAddPanel(false);
+      setNewProduct({
+        name: '',
+        description: '',
+        price: '',
+        image: '',
+        gallery: ['', '', ''],
+        category: 'Bouquet',
+        isNew: false,
+        isLimitedStock: false,
+        isFeatured: false,
+        isOnSale: false,
+        stock: '',
+      });
+      return;
+    }
+
+    // Create new product
     const { data, error } = await createProductApi(supabaseProduct);
 
     if (error) {
@@ -340,11 +401,6 @@ const AdminPage = () => {
       gallery[index] = value;
       return { ...prev, gallery };
     });
-  };
-
-  const handleEditProduct = () => {
-    // Product editing state would be managed via setShowAddPanel and form state
-    setShowAddPanel(true);
   };
 
   // Gallery upload and change handling deferred for future enhancement
@@ -738,7 +794,6 @@ const AdminPage = () => {
             <TextField label="Heading" value={about.heading} onChange={(value) => updateContent('about', { heading: value })} />
             <p className="text-xs text-gray-500 mt-1 ml-1">Main section title</p>
           </div>
-
           <div>
             <TextField
               label="Description"
@@ -1378,7 +1433,7 @@ const AdminPage = () => {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               </svg>
             </button>
-            <h3 className="text-xl sm:text-2xl font-semibold text-soft-brown mb-4 sm:mb-6 pr-8">Add New Product</h3>
+            <h3 className="text-xl sm:text-2xl font-semibold text-soft-brown mb-4 sm:mb-6 pr-8">{editingProductId ? 'Edit Product' : 'Add New Product'}</h3>
             <form className="grid gap-3 sm:gap-4 md:grid-cols-2" onSubmit={handleAddProduct}>
               <TextField label="Name" value={newProduct.name} onChange={(value) => handleNewProductChange('name', value)} />
               <TextField
@@ -1517,7 +1572,23 @@ const AdminPage = () => {
               <div className="md:col-span-2 flex flex-col-reverse sm:flex-row justify-end gap-2.5 sm:gap-3 pt-2 border-t border-beige/40">
                 <button 
                   type="button" 
-                  onClick={() => setShowAddPanel(false)} 
+                  onClick={() => {
+                    setShowAddPanel(false);
+                    setEditingProductId(null);
+                    setNewProduct({
+                      name: '',
+                      description: '',
+                      price: '',
+                      image: '',
+                      gallery: ['', '', ''],
+                      category: 'Bouquet',
+                      isNew: false,
+                      isLimitedStock: false,
+                      isFeatured: false,
+                      isOnSale: false,
+                      stock: '',
+                    });
+                  }}
                   className="rounded-full border border-beige/60 px-4 py-2.5 sm:py-2 text-sm font-semibold text-soft-brown hover:bg-beige/20 active:bg-beige/40 transition"
                 >
                   Cancel
@@ -1526,7 +1597,7 @@ const AdminPage = () => {
                   type="submit" 
                   className="rounded-full bg-accent-red px-6 py-2.5 sm:py-2 text-sm font-semibold text-white hover:bg-red-700 active:bg-red-800 transition shadow-md"
                 >
-                  Save Product
+                  {editingProductId ? 'Update Product' : 'Save Product'}
                 </button>
               </div>
             </form>
