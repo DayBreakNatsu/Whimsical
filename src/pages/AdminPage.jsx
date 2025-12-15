@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
-import { useSiteContent } from '../context/SiteContentContext';
+import { useSiteContent, defaultContent } from '../context/SiteContentContext';
 import { uploadImage, deleteImage, deleteMultipleImages, listImages, getStorageStats, clearStorage } from '../services/storageService';
 import {
   createProduct as createProductApi,
   deleteProduct as deleteProductApi,
 } from '../services/productService';
+import { updateSiteSetting } from '../services/siteSettingsService';
 import { getAllOrders } from '../services/orderService';
 import { signIn, signOut as supaSignOut, isAdmin, devSignIn } from '../services/authService';
 
@@ -37,7 +38,7 @@ const AdminPage = () => {
   const [password, setPassword] = useState('');
   const [loginError, setLoginError] = useState('');
   const [formError, setFormError] = useState('');
-  const [isAuthed, setIsAuthed] = useState(() => localStorage.getItem(AUTH_KEY) === 'true');
+  const [isAuthed, setIsAuthed] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showAddPanel, setShowAddPanel] = useState(false);
   // Product editing state managed via showProductModal state
@@ -64,6 +65,45 @@ const AdminPage = () => {
   const [storageLoading, setStorageLoading] = useState(false);
   const [storageClearConfirm, setStorageClearConfirm] = useState(false);
   const [storageError, setStorageError] = useState('');
+  const [savingGeneral, setSavingGeneral] = useState(false);
+  const [generalSaveMessage, setGeneralSaveMessage] = useState('');
+  const [savingHero, setSavingHero] = useState(false);
+  const [heroSaveMessage, setHeroSaveMessage] = useState('');
+  const [savingAbout, setSavingAbout] = useState(false);
+  const [aboutSaveMessage, setAboutSaveMessage] = useState('');
+  const [savingSocials, setSavingSocials] = useState(false);
+  const [socialsSaveMessage, setSocialsSaveMessage] = useState('');
+
+  // Validate any existing local auth flag against the backend/auth service
+  React.useEffect(() => {
+    let mounted = true;
+    const validate = async () => {
+      try {
+        const stored = localStorage.getItem(AUTH_KEY) === 'true';
+        if (!stored) return;
+        const admin = await isAdmin();
+        if (!mounted) return;
+        if (admin) {
+          setIsAuthed(true);
+        } else {
+          localStorage.removeItem(AUTH_KEY);
+          setIsAuthed(false);
+        }
+      } catch (e) {
+        localStorage.removeItem(AUTH_KEY);
+        if (mounted) setIsAuthed(false);
+      }
+    };
+
+    validate();
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  // Mobile menu state for admin navigation (declare early to avoid hooks-order issues)
+  const [showAdminMenu, setShowAdminMenu] = useState(false);
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -393,8 +433,11 @@ const AdminPage = () => {
     );
   }
 
-  const { hero, about, socials, general } = content;
-  const products = content.products || [];
+  const hero = content?.hero || defaultContent.hero;
+  const about = content?.about || defaultContent.about;
+  const socials = content?.socials || defaultContent.socials;
+  const general = content?.general || defaultContent.general;
+  const products = content?.products || [];
   const totalProducts = products.length;
   const lowStockCount = products.filter((product) => Number(product.stock) <= 5).length;
   const newArrivalCount = products.filter((product) => product.isNew).length;
@@ -403,8 +446,7 @@ const AdminPage = () => {
     product.category.toLowerCase().includes(productSearch.toLowerCase())
   );
 
-  // Mobile menu state for admin navigation
-  const [showAdminMenu, setShowAdminMenu] = React.useState(false);
+  
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-beige/30 to-white overflow-x-hidden">
@@ -469,10 +511,36 @@ const AdminPage = () => {
 
           <div className="space-y-4 sm:space-y-6 md:space-y-8 lg:space-y-10 order-1 lg:order-2 w-full min-w-0">
       <section id="hero" className="bg-gradient-to-br from-white to-beige/20 rounded-2xl sm:rounded-3xl shadow-lg hover:shadow-xl p-3 sm:p-5 md:p-7 space-y-4 sm:space-y-6 border-2 border-beige/40 transition-shadow duration-300 w-full">
-        <div className="space-y-1">
-          <p className="text-xs uppercase tracking-[0.6em] text-accent-red font-semibold">Hero Section</p>
-          <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-soft-brown">Hero Banner</h2>
-          <p className="text-sm text-gray-600">Customize the homepage hero section that welcomes visitors</p>
+        <div className="flex items-start justify-between">
+          <div className="space-y-1">
+            <p className="text-xs uppercase tracking-[0.6em] text-accent-red font-semibold">Hero Section</p>
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-soft-brown">Hero Banner</h2>
+            <p className="text-sm text-gray-600">Customize the homepage hero section that welcomes visitors</p>
+          </div>
+          <div>
+            <button
+              onClick={async () => {
+                setHeroSaveMessage('');
+                setSavingHero(true);
+                try {
+                  const res = await updateSiteSetting('hero', hero);
+                  if (res.error) throw res.error;
+                  setHeroSaveMessage('Saved successfully');
+                } catch (err) {
+                  console.error('Failed to save hero', err);
+                  setHeroSaveMessage(err?.message || 'Failed to save hero');
+                } finally {
+                  setSavingHero(false);
+                  setTimeout(() => setHeroSaveMessage(''), 3000);
+                }
+              }}
+              disabled={savingHero}
+              className="rounded-full bg-accent-red px-4 py-2 text-sm font-semibold text-white hover:bg-red-700 active:bg-red-800 transition disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {savingHero ? 'Saving…' : 'Save'}
+            </button>
+            {heroSaveMessage && <div className="text-sm text-soft-brown mt-1">{heroSaveMessage}</div>}
+          </div>
         </div>
 
         <div className="space-y-4 sm:space-y-5 bg-white/60 rounded-2xl p-4 sm:p-6 backdrop-blur">
@@ -522,12 +590,40 @@ const AdminPage = () => {
           </div>
         </div>
       </section>
-
       <section className="bg-gradient-to-br from-white to-beige/20 rounded-2xl sm:rounded-3xl shadow-lg hover:shadow-xl p-3 sm:p-5 md:p-7 space-y-4 sm:space-y-6 border-2 border-beige/40 transition-shadow duration-300">
-        <div className="space-y-1 sm:space-y-2">
-          <p className="text-xs uppercase tracking-[0.6em] text-accent-red font-semibold">⚙️ Configuration</p>
-          <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-soft-brown">Shop Settings</h2>
-          <p className="text-sm text-gray-600">Configure checkout costs and fees</p>
+        <div className="flex items-start justify-between">
+          <div className="space-y-1 sm:space-y-2">
+            <p className="text-xs uppercase tracking-[0.6em] text-accent-red font-semibold">⚙️ Configuration</p>
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-soft-brown">Shop Settings</h2>
+            <p className="text-sm text-gray-600">Configure checkout costs and fees</p>
+          </div>
+          <div>
+            <button
+              onClick={async () => {
+                setGeneralSaveMessage('');
+                setSavingGeneral(true);
+                try {
+                  // Persist both settings
+                  const shipRes = await updateSiteSetting('shippingFee', general?.shippingFee ?? 0);
+                  if (shipRes.error) throw shipRes.error;
+                  const taxRes = await updateSiteSetting('taxRate', general?.taxRate ?? 0);
+                  if (taxRes.error) throw taxRes.error;
+                  setGeneralSaveMessage('Saved successfully');
+                } catch (err) {
+                  console.error('Failed to save general settings', err);
+                  setGeneralSaveMessage(err?.message || 'Failed to save settings');
+                } finally {
+                  setSavingGeneral(false);
+                  setTimeout(() => setGeneralSaveMessage(''), 3000);
+                }
+              }}
+              disabled={savingGeneral}
+              className="rounded-full bg-accent-red px-4 py-2 text-sm font-semibold text-white hover:bg-red-700 active:bg-red-800 transition disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {savingGeneral ? 'Saving…' : 'Save'}
+            </button>
+            {generalSaveMessage && <div className="text-sm text-soft-brown mt-1">{generalSaveMessage}</div>}
+          </div>
         </div>
 
         <div className="grid gap-4 sm:gap-6 sm:grid-cols-2">
@@ -547,25 +643,51 @@ const AdminPage = () => {
             />
             <p className="text-xs text-gray-500 mt-2 ml-1">Percentage applied to subtotal</p>
           </div>
+          
         </div>
       </section>
-
       <section className="bg-gradient-to-bl from-white to-muted-pink/10 rounded-2xl sm:rounded-3xl shadow-lg hover:shadow-xl p-3 sm:p-5 md:p-7 space-y-4 sm:space-y-6 border-2 border-beige/40 transition-shadow duration-300">
-        <div className="space-y-1 sm:space-y-2">
-          <p className="text-xs uppercase tracking-[0.6em] text-accent-red font-semibold">🔗 Community</p>
-          <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-soft-brown">Social Links</h2>
-          <p className="text-sm text-gray-600">Connect with customers on social media</p>
+        <div className="flex items-start justify-between">
+          <div className="space-y-1 sm:space-y-2">
+            <p className="text-xs uppercase tracking-[0.6em] text-accent-red font-semibold">🔗 Community</p>
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-soft-brown">Social Links</h2>
+            <p className="text-sm text-gray-600">Connect with customers on social media</p>
+          </div>
+          <div>
+            <button
+              onClick={async () => {
+                setSocialsSaveMessage('');
+                setSavingSocials(true);
+                try {
+                  const res = await updateSiteSetting('socials', socials);
+                  if (res.error) throw res.error;
+                  setSocialsSaveMessage('Saved successfully');
+                } catch (err) {
+                  console.error('Failed to save socials', err);
+                  setSocialsSaveMessage(err?.message || 'Failed to save socials');
+                } finally {
+                  setSavingSocials(false);
+                  setTimeout(() => setSocialsSaveMessage(''), 3000);
+                }
+              }}
+              disabled={savingSocials}
+              className="rounded-full bg-accent-red px-4 py-2 text-sm font-semibold text-white hover:bg-red-700 active:bg-red-800 transition disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {savingSocials ? 'Saving…' : 'Save'}
+            </button>
+            {socialsSaveMessage && <div className="text-sm text-soft-brown mt-1">{socialsSaveMessage}</div>}
+          </div>
         </div>
 
         <div className="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-3">
           {[
-            ['facebook', 'Facebook', '👍'],
-            ['instagram', 'Instagram', '📸'],
-            ['tiktok', 'TikTok', '🎵'],
-          ].map(([key, label, emoji]) => (
+            ['facebook', 'Facebook', 'facebook.png'],
+            ['instagram', 'Instagram', 'instagram.png'],
+            ['tiktok', 'TikTok', 'tiktok.png'],
+          ].map(([key, label, icon]) => (
             <div key={key} className="bg-white/60 rounded-2xl p-4 sm:p-5 backdrop-blur border border-beige/40 hover:border-accent-red/30 transition-colors space-y-3">
               <div className="flex items-center gap-2">
-                <span className="text-2xl">{emoji}</span>
+                <img src={`/logo/${icon}`} alt={label} className="h-7 w-7 object-contain" />
                 <h3 className="font-semibold text-soft-brown">{label}</h3>
               </div>
               <TextField
@@ -579,10 +701,36 @@ const AdminPage = () => {
       </section>
 
       <section id="about" className="bg-gradient-to-br from-white to-beige/20 rounded-2xl sm:rounded-3xl shadow-lg hover:shadow-xl p-3 sm:p-5 md:p-7 space-y-4 sm:space-y-6 border-2 border-beige/40 transition-shadow duration-300">
-        <div className="space-y-1 sm:space-y-2">
-          <p className="text-xs uppercase tracking-[0.6em] text-accent-red font-semibold">📖 Story</p>
-          <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-soft-brown">About Section</h2>
-          <p className="text-sm text-gray-600">Tell customers your brand story</p>
+        <div className="flex items-start justify-between">
+          <div className="space-y-1 sm:space-y-2">
+            <p className="text-xs uppercase tracking-[0.6em] text-accent-red font-semibold">📖 Story</p>
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-soft-brown">About Section</h2>
+            <p className="text-sm text-gray-600">Tell customers your brand story</p>
+          </div>
+          <div>
+            <button
+              onClick={async () => {
+                setAboutSaveMessage('');
+                setSavingAbout(true);
+                try {
+                  const res = await updateSiteSetting('about', about);
+                  if (res.error) throw res.error;
+                  setAboutSaveMessage('Saved successfully');
+                } catch (err) {
+                  console.error('Failed to save about', err);
+                  setAboutSaveMessage(err?.message || 'Failed to save about');
+                } finally {
+                  setSavingAbout(false);
+                  setTimeout(() => setAboutSaveMessage(''), 3000);
+                }
+              }}
+              disabled={savingAbout}
+              className="rounded-full bg-accent-red px-4 py-2 text-sm font-semibold text-white hover:bg-red-700 active:bg-red-800 transition disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {savingAbout ? 'Saving…' : 'Save'}
+            </button>
+            {aboutSaveMessage && <div className="text-sm text-soft-brown mt-1">{aboutSaveMessage}</div>}
+          </div>
         </div>
 
         <div className="space-y-4 sm:space-y-5 bg-white/60 rounded-2xl p-4 sm:p-6 backdrop-blur border border-beige/40">
@@ -590,6 +738,7 @@ const AdminPage = () => {
             <TextField label="Heading" value={about.heading} onChange={(value) => updateContent('about', { heading: value })} />
             <p className="text-xs text-gray-500 mt-1 ml-1">Main section title</p>
           </div>
+
           <div>
             <TextField
               label="Description"

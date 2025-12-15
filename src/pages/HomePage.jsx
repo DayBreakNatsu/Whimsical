@@ -140,7 +140,7 @@ const HomePage = () => {
                 rel="noreferrer"
                 className="w-full sm:w-auto inline-flex items-center justify-center gap-3 rounded-full border border-muted-pink px-6 py-3 text-soft-brown hover:bg-muted-pink/20 transition"
               >
-                <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-accent-red/15 text-accent-red font-bold">f</span>
+                <img src="/logo/facebook.png" alt="Facebook" className="h-8 w-8 rounded-full object-contain" />
                 Facebook
               </a>
             )}
@@ -151,7 +151,7 @@ const HomePage = () => {
                 rel="noreferrer"
                 className="w-full sm:w-auto inline-flex items-center justify-center gap-3 rounded-full border border-muted-pink px-6 py-3 text-soft-brown hover:bg-muted-pink/20 transition"
               >
-                <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-accent-red/15 text-accent-red font-semibold">IG</span>
+                <img src="/logo/instagram.png" alt="Instagram" className="h-8 w-8 rounded-full object-contain" />
                 Instagram
               </a>
             )}
@@ -162,7 +162,7 @@ const HomePage = () => {
                 rel="noreferrer"
                 className="w-full sm:w-auto inline-flex items-center justify-center gap-3 rounded-full border border-muted-pink px-6 py-3 text-soft-brown hover:bg-muted-pink/20 transition"
               >
-                <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-accent-red/15 text-accent-red font-semibold">TT</span>
+                <img src="/logo/tiktok.png" alt="TikTok" className="h-8 w-8 rounded-full object-contain" />
                 TikTok
               </a>
             )}

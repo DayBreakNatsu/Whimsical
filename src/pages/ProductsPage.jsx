@@ -222,8 +222,8 @@ const ProductsPage = () => {
       </div>
 
       {selectedProduct && (
-        <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/40 px-4">
-          <div className="relative w-full max-w-4xl rounded-3xl bg-white shadow-2xl overflow-hidden">
+        <div className="fixed inset-0 z-40 flex items-end sm:items-center justify-center bg-black/40 p-0 sm:p-4 py-4 sm:py-0">
+          <div className="relative w-full max-w-4xl rounded-3xl bg-white shadow-2xl max-h-[90vh] overflow-y-auto">
             <button
               onClick={() => setSelectedProduct(null)}
               className="absolute right-4 top-4 text-soft-brown hover:text-accent-red"
