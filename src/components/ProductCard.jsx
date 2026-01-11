@@ -56,6 +56,18 @@ const ProductCard = ({ product }) => {
             </span>
           )}
           
+          {/* Sample Product Badge - if not out of stock */}
+          {(product.isSample ?? product.is_sample) && !isOutOfStock && (
+            <span className="rounded-full bg-blue-600/90 px-3 py-1 text-xs font-semibold text-white shadow ml-auto">
+              📌 Sample
+            </span>
+          )}
+          {(product.isSample ?? product.is_sample) && isOutOfStock && (
+            <span className="rounded-full bg-blue-600/90 px-3 py-1 text-xs font-semibold text-white shadow">
+              📌 Sample
+            </span>
+          )}
+          
           {/* New Arrival - right */}
           {(product.isNew ?? product.is_new) && !isOutOfStock && (
             <span className="rounded-full bg-accent-red/90 px-3 py-1 text-xs font-semibold text-white shadow ml-auto">

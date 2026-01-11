@@ -17,6 +17,8 @@ const normalizeProduct = (p) => {
     isOnSale: p.is_on_sale ?? p.isOnSale ?? false,
     isFeatured: p.is_featured ?? p.isFeatured ?? false,
     isLimitedStock: p.is_limited_stock ?? p.isLimitedStock ?? false,
+    isSample: p.is_sample ?? p.isSample ?? false,
+    createdBy: p.created_by ?? p.createdBy ?? null,
     createdAt: p.created_at ?? p.createdAt,
     reviews: p.reviews ?? p.review_list ?? null,
   }

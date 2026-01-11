@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { getProducts } from '../services/productService';
+import { getSiteSettings } from '../services/siteSettingsService';
 /* eslint-disable react-refresh/only-export-components */
 
 const STORAGE_KEY = 'whimsical-site-content-v1';
@@ -130,28 +131,80 @@ export function SiteContentProvider({ children }) {
     }
   }, [content]);
 
-  // Load products from Supabase on mount
+  // Load products and site settings from Supabase on mount
   useEffect(() => {
-    const loadProductsFromSupabase = async () => {
+    const loadDataFromSupabase = async () => {
       try {
-        const { data: products, error } = await getProducts();
-        if (error) {
-          console.warn('Failed to load products from Supabase:', error);
-          return;
-        }
-        
-        if (products && products.length > 0) {
+        // Load products
+        const { data: products, error: productsError } = await getProducts();
+        if (productsError) {
+          console.warn('Failed to load products from Supabase:', productsError);
+        } else if (products && products.length > 0) {
           setContent((prev) => ({
             ...prev,
             products: products,
           }));
         }
+
+        // Load site settings
+        const { data: settings, error: settingsError } = await getSiteSettings();
+        if (settingsError) {
+          console.warn('Failed to load site settings from Supabase:', settingsError);
+          return;
+        }
+
+        if (settings && Object.keys(settings).length > 0) {
+          setContent((prev) => {
+            const updated = { ...prev };
+            
+            // Merge hero settings
+            if (settings.hero) {
+              updated.hero = {
+                ...prev.hero,
+                ...(typeof settings.hero === 'object' ? settings.hero : {}),
+              };
+            }
+            
+            // Merge about settings
+            if (settings.about) {
+              updated.about = {
+                ...prev.about,
+                ...(typeof settings.about === 'object' ? settings.about : {}),
+                highlights: (typeof settings.about === 'object' && Array.isArray(settings.about.highlights)) 
+                  ? settings.about.highlights 
+                  : prev.about.highlights,
+                pillars: (typeof settings.about === 'object' && Array.isArray(settings.about.pillars)) 
+                  ? settings.about.pillars 
+                  : prev.about.pillars,
+              };
+            }
+            
+            // Merge socials settings
+            if (settings.socials) {
+              updated.socials = {
+                ...prev.socials,
+                ...(typeof settings.socials === 'object' ? settings.socials : {}),
+              };
+            }
+            
+            // Merge general settings (shipping fee, tax rate)
+            if (settings.shippingFee !== undefined || settings.taxRate !== undefined) {
+              updated.general = {
+                ...prev.general,
+                ...(settings.shippingFee !== undefined && { shippingFee: settings.shippingFee }),
+                ...(settings.taxRate !== undefined && { taxRate: settings.taxRate }),
+              };
+            }
+            
+            return updated;
+          });
+        }
       } catch (err) {
-        console.warn('Error loading products from Supabase:', err);
+        console.warn('Error loading data from Supabase:', err);
       }
     };
 
-    loadProductsFromSupabase();
+    loadDataFromSupabase();
   }, []);
 
   const updateContent = (section, updates) => {

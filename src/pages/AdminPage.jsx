@@ -57,6 +57,7 @@ const AdminPage = () => {
     isFeatured: false,
     isOnSale: false,
     stock: '',
+    isSample: false,
   });
   const [showImageLibrary, setShowImageLibrary] = useState(false);
   const [imageLibraryTarget, setImageLibraryTarget] = useState({ type: null, productId: null });
@@ -292,6 +293,7 @@ const AdminPage = () => {
       is_featured: newProduct.isFeatured,
       is_on_sale: newProduct.isOnSale,
       stock: Number(newProduct.stock) || 0,
+      is_sample: newProduct.isSample,
     };
 
     if (editingProductId) {
@@ -315,6 +317,7 @@ const AdminPage = () => {
         isFeatured: supabaseProduct.is_featured,
         isOnSale: supabaseProduct.is_on_sale,
         stock: supabaseProduct.stock,
+        isSample: supabaseProduct.is_sample,
       });
 
       setEditingProductId(null);
@@ -331,6 +334,7 @@ const AdminPage = () => {
         isFeatured: false,
         isOnSale: false,
         stock: '',
+        isSample: false,
       });
       return;
     }
@@ -363,6 +367,7 @@ const AdminPage = () => {
       isFeatured: false,
       isOnSale: false,
       stock: '',
+      isSample: false,
     });
     setShowAddPanel(false);
   };
@@ -1554,6 +1559,15 @@ const AdminPage = () => {
                       className="rounded border-beige/60 text-accent-red focus:ring-accent-red/40 cursor-pointer"
                     />
                     <span>🔥 On Sale</span>
+                  </label>
+                  <label className="flex items-center gap-3 text-sm font-medium text-soft-brown cursor-pointer hover:bg-muted-pink/10 p-2 rounded-lg transition">
+                    <input
+                      type="checkbox"
+                      checked={newProduct.isSample}
+                      onChange={(e) => handleNewProductChange('isSample', e.target.checked)}
+                      className="rounded border-beige/60 text-accent-red focus:ring-accent-red/40 cursor-pointer"
+                    />
+                    <span>📌 Sample Product</span>
                   </label>
                 </div>
               </div>
