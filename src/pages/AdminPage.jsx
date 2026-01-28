@@ -7,7 +7,7 @@ import {
   deleteProduct as deleteProductApi,
 } from '../services/productService';
 import { updateSiteSetting } from '../services/siteSettingsService';
-import { getAllOrders } from '../services/orderService';
+import { getAllOrders, updateOrderStatus, deleteOrder } from '../services/orderService';
 import { signIn, signOut as supaSignOut, isAdmin, devSignIn } from '../services/authService';
 
 const AUTH_KEY = 'whimsical-admin-auth';
@@ -75,6 +75,8 @@ const AdminPage = () => {
   const [aboutSaveMessage, setAboutSaveMessage] = useState('');
   const [savingSocials, setSavingSocials] = useState(false);
   const [socialsSaveMessage, setSocialsSaveMessage] = useState('');
+  const [showDetailedOrdersModal, setShowDetailedOrdersModal] = useState(false);
+  const [detailedOrdersFilter, setDetailedOrdersFilter] = useState('all');
 
   // Validate any existing local auth flag against the backend/auth service
   React.useEffect(() => {
@@ -527,9 +529,56 @@ const AdminPage = () => {
           </button>
         </div>
 
+        {/* Mobile Sidebar - appears directly below button */}
+        {showAdminMenu && (
+          <aside className="lg:hidden mb-4 order-2 min-w-0">
+            <div className="bg-white rounded-2xl shadow-lg border-2 border-beige/40 p-3 sm:p-4 md:p-5">
+              <div className="lg:block">
+                <p className="text-xs uppercase tracking-[0.5em] text-soft-brown/60">Dashboard</p>
+              </div>
+              <nav className="space-y-1 sm:space-y-2 text-xs sm:text-sm font-medium text-soft-brown">
+                {[
+                  ['hero', 'Hero Banner'],
+                  ['about', 'About Story'],
+                  ['inventory', 'Inventory'],
+                  ['orders', 'Orders'],
+                  ['storage', 'Storage'],
+                ].map(([href, label]) => (
+                  <a
+                    key={href}
+                    href={`#${href}`}
+                    onClick={() => setShowAdminMenu(false)}
+                    className="block rounded-lg px-2.5 sm:px-3 py-2 sm:py-2 hover:bg-muted-pink/20 hover:text-accent-red transition active:bg-muted-pink/40"
+                  >
+                    {label}
+                  </a>
+                ))}
+              </nav>
+              <div className="mt-4 sm:mt-6 space-y-2 sm:space-y-3">
+                <button
+                  onClick={resetContent}
+                  className="w-full rounded-full border border-beige/80 px-3 sm:px-4 py-2.5 sm:py-2 text-xs sm:text-sm text-soft-brown hover:bg-beige/40 active:bg-beige/60 font-medium transition"
+                >
+                  Reset Defaults
+                </button>
+                <button
+                  onClick={() => {
+                    supaSignOut();
+                    setIsAuthed(false);
+                    localStorage.removeItem(AUTH_KEY);
+                  }}
+                  className="w-full rounded-full bg-soft-brown text-white px-3 sm:px-4 py-2.5 sm:py-2 text-xs sm:text-sm font-bold hover:bg-soft-brown/85 active:bg-soft-brown/70 transition"
+                >
+                  Log out
+                </button>
+              </div>
+            </div>
+          </aside>
+        )}
+
         <div className="grid gap-3 md:gap-6 lg:gap-8 lg:grid-cols-[160px_1fr]">
-          {/* Sidebar */}
-          <aside className={`${showAdminMenu ? 'block' : 'hidden'} lg:block lg:sticky lg:top-20 h-fit order-2 lg:order-1 min-w-0`}>
+          {/* Sidebar - Desktop only */}
+          <aside className="hidden lg:block lg:sticky lg:top-20 h-fit order-2 lg:order-1 min-w-0">
             <div className="bg-white rounded-2xl shadow-lg border-2 border-beige/40 p-3 sm:p-4 md:p-5">
               <div className="lg:block">
                 <p className="text-xs uppercase tracking-[0.5em] text-soft-brown/60">Dashboard</p>
@@ -560,9 +609,13 @@ const AdminPage = () => {
                 >
                   Reset Defaults
                 </button>
-                <button 
-                  onClick={handleLogout} 
-                  className="w-full rounded-full bg-gray-800 px-3 sm:px-4 py-2.5 sm:py-2 text-xs sm:text-sm text-white hover:bg-gray-900 active:bg-gray-950 font-medium transition"
+                <button
+                  onClick={() => {
+                    supaSignOut();
+                    setIsAuthed(false);
+                    localStorage.removeItem(AUTH_KEY);
+                  }}
+                  className="w-full rounded-full bg-soft-brown text-white px-3 sm:px-4 py-2.5 sm:py-2 text-xs sm:text-sm font-bold hover:bg-soft-brown/85 active:bg-soft-brown/70 transition"
                 >
                   Log out
                 </button>
@@ -1186,8 +1239,8 @@ const AdminPage = () => {
             </span>
           </div>
           <a
-            href="/orders"
-            className="inline-flex items-center rounded-full bg-accent-red px-4 sm:px-6 py-2.5 sm:py-2 text-xs sm:text-sm text-white font-semibold shadow-md hover:bg-red-700 active:bg-red-800 transition"
+            onClick={() => setShowDetailedOrdersModal(true)}
+            className="inline-flex items-center rounded-full bg-accent-red px-4 sm:px-6 py-2.5 sm:py-2 text-xs sm:text-sm text-white font-semibold shadow-md hover:bg-red-700 active:bg-red-800 transition cursor-pointer"
           >
             View Detailed Orders →
           </a>
@@ -1675,6 +1728,138 @@ const AdminPage = () => {
               <button
                 type="button"
                 onClick={() => setShowImageLibrary(false)}
+                className="rounded-full border border-beige/60 px-4 sm:px-6 py-2.5 sm:py-2 text-sm font-semibold text-soft-brown hover:bg-beige/20 active:bg-beige/40 transition"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Detailed Orders Modal */}
+      {showDetailedOrdersModal && (
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 p-0 sm:p-4 py-4 sm:py-0">
+          <div className="w-full sm:w-full md:w-3xl lg:w-4xl max-w-4xl bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl max-h-[90vh] overflow-y-auto">
+            <div className="sticky top-0 bg-white border-b-2 border-beige/40 px-4 sm:px-6 py-4 flex items-center justify-between rounded-t-3xl">
+              <div>
+                <h2 className="text-xl sm:text-2xl font-bold text-soft-brown">All Orders</h2>
+                <p className="text-xs sm:text-sm text-gray-600 mt-1">Manage and view all customer orders</p>
+              </div>
+              <button
+                onClick={() => setShowDetailedOrdersModal(false)}
+                className="text-gray-400 hover:text-gray-600 transition"
+              >
+                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            <div className="p-4 sm:p-6 space-y-4">
+              {/* Filter */}
+              <div>
+                <label className="block text-sm font-medium text-soft-brown mb-2">Filter by Status</label>
+                <select 
+                  value={detailedOrdersFilter} 
+                  onChange={(e) => setDetailedOrdersFilter(e.target.value)}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-red text-sm"
+                >
+                  <option value="all">All Orders</option>
+                  <option value="pending">Pending</option>
+                  <option value="processing">Processing</option>
+                  <option value="shipped">Shipped</option>
+                  <option value="delivered">Delivered</option>
+                  <option value="cancelled">Cancelled</option>
+                </select>
+              </div>
+
+              {/* Orders Table */}
+              {ordersState.loading ? (
+                <div className="text-center py-8 text-gray-600">Loading orders...</div>
+              ) : ordersState.items.length === 0 ? (
+                <div className="text-center py-8 text-gray-500">No orders found</div>
+              ) : (
+                <div className="overflow-hidden rounded-2xl border-2 border-beige/40 bg-white">
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead className="bg-gray-50 border-b-2 border-beige/40">
+                        <tr>
+                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Date</th>
+                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Order ID</th>
+                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Customer</th>
+                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Email</th>
+                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Total</th>
+                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Status</th>
+                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Action</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-gray-200">
+                        {ordersState.items
+                          .filter(order => detailedOrdersFilter === 'all' || order.status === detailedOrdersFilter)
+                          .map((order) => (
+                            <tr key={order.id} className="hover:bg-gray-50">
+                              <td className="px-4 py-3 text-xs text-gray-900 whitespace-nowrap">
+                                {new Date(order.created_at).toLocaleDateString('en-GB')}
+                              </td>
+                              <td className="px-4 py-3 text-xs font-medium text-gray-900">{order.id}</td>
+                              <td className="px-4 py-3 text-xs text-gray-900">{order.shipping_address?.name || 'Guest'}</td>
+                              <td className="px-4 py-3 text-xs text-gray-900">{order.email}</td>
+                              <td className="px-4 py-3 text-xs text-gray-900">₱{Number(order.total || 0).toFixed(2)}</td>
+                              <td className="px-4 py-3 text-xs">
+                                <select
+                                  value={order.status}
+                                  onChange={(e) => {
+                                    const newStatus = e.target.value;
+                                    setOrdersState(prev => ({
+                                      ...prev,
+                                      items: prev.items.map(o => o.id === order.id ? { ...o, status: newStatus } : o)
+                                    }));
+                                    updateOrderStatus(order.id, newStatus);
+                                  }}
+                                  className={`px-2 py-1 rounded-full text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-accent-red/40 cursor-pointer ${
+                                    order.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                                    order.status === 'processing' ? 'bg-blue-100 text-blue-800' :
+                                    order.status === 'shipped' ? 'bg-purple-100 text-purple-800' :
+                                    order.status === 'delivered' ? 'bg-green-100 text-green-800' :
+                                    'bg-red-100 text-red-800'
+                                  }`}
+                                >
+                                  <option value="pending">Pending</option>
+                                  <option value="processing">Processing</option>
+                                  <option value="shipped">Shipped</option>
+                                  <option value="delivered">Delivered</option>
+                                  <option value="cancelled">Cancelled</option>
+                                </select>
+                              </td>
+                              <td className="px-4 py-3 text-xs">
+                                <button
+                                  onClick={() => {
+                                    if (window.confirm('Are you sure you want to delete this order?')) {
+                                      setOrdersState(prev => ({
+                                        ...prev,
+                                        items: prev.items.filter(o => o.id !== order.id)
+                                      }));
+                                      deleteOrder(order.id);
+                                    }
+                                  }}
+                                  className="text-red-600 hover:text-red-900 font-medium hover:underline transition"
+                                >
+                                  Delete
+                                </button>
+                              </td>
+                            </tr>
+                          ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="sticky bottom-0 border-t-2 border-beige/40 bg-white px-4 sm:px-6 py-4 flex justify-end gap-3 rounded-b-3xl">
+              <button
+                onClick={() => setShowDetailedOrdersModal(false)}
                 className="rounded-full border border-beige/60 px-4 sm:px-6 py-2.5 sm:py-2 text-sm font-semibold text-soft-brown hover:bg-beige/20 active:bg-beige/40 transition"
               >
                 Close
