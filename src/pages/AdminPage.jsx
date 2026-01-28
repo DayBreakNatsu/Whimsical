@@ -1774,7 +1774,7 @@ const AdminPage = () => {
                 </select>
               </div>
 
-              {/* Orders Table */}
+              {/* Orders Table/Cards */}
               {ordersState.loading ? (
                 <div className="text-center py-8 text-gray-600">Loading orders...</div>
               ) : ordersState.items.length === 0 ? (
@@ -1782,16 +1782,16 @@ const AdminPage = () => {
               ) : (
                 <div className="overflow-hidden rounded-2xl border-2 border-beige/40 bg-white">
                   <div className="overflow-x-auto">
-                    <table className="w-full text-sm">
-                      <thead className="bg-gray-50 border-b-2 border-beige/40">
+                    <table className="w-full text-sm min-w-max">
+                      <thead className="bg-gray-50 border-b-2 border-beige/40 sticky top-0">
                         <tr>
-                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Date</th>
-                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Order ID</th>
-                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Customer</th>
-                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Email</th>
-                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Total</th>
-                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Status</th>
-                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Action</th>
+                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider whitespace-nowrap">Date</th>
+                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider whitespace-nowrap">Order ID</th>
+                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider whitespace-nowrap">Customer</th>
+                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider whitespace-nowrap">Email</th>
+                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider whitespace-nowrap">Total</th>
+                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider whitespace-nowrap">Status</th>
+                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider whitespace-nowrap">Action</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-gray-200">
@@ -1802,11 +1802,11 @@ const AdminPage = () => {
                               <td className="px-4 py-3 text-xs text-gray-900 whitespace-nowrap">
                                 {new Date(order.created_at).toLocaleDateString('en-GB')}
                               </td>
-                              <td className="px-4 py-3 text-xs font-medium text-gray-900">{order.id}</td>
-                              <td className="px-4 py-3 text-xs text-gray-900">{order.shipping_address?.name || 'Guest'}</td>
-                              <td className="px-4 py-3 text-xs text-gray-900">{order.email}</td>
-                              <td className="px-4 py-3 text-xs text-gray-900">₱{Number(order.total || 0).toFixed(2)}</td>
-                              <td className="px-4 py-3 text-xs">
+                              <td className="px-4 py-3 text-xs font-medium text-gray-900 whitespace-nowrap">{order.id}</td>
+                              <td className="px-4 py-3 text-xs text-gray-900 whitespace-nowrap">{order.shipping_address?.name || 'Guest'}</td>
+                              <td className="px-4 py-3 text-xs text-gray-900 whitespace-nowrap">{order.email}</td>
+                              <td className="px-4 py-3 text-xs text-gray-900 whitespace-nowrap">₱{Number(order.total || 0).toFixed(2)}</td>
+                              <td className="px-4 py-3 text-xs whitespace-nowrap">
                                 <select
                                   value={order.status}
                                   onChange={(e) => {
@@ -1832,7 +1832,7 @@ const AdminPage = () => {
                                   <option value="cancelled">Cancelled</option>
                                 </select>
                               </td>
-                              <td className="px-4 py-3 text-xs">
+                              <td className="px-4 py-3 text-xs whitespace-nowrap">
                                 <button
                                   onClick={() => {
                                     if (window.confirm('Are you sure you want to delete this order?')) {

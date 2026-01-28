@@ -13,11 +13,13 @@ const normalizeProduct = (p) => {
     image: p.image,
     gallery: Array.isArray(p.gallery) ? p.gallery : p.gallery ? [p.gallery] : [],
     stock: p.stock,
+    sku: p.sku,
     isNew: p.is_new ?? p.isNew ?? false,
     isOnSale: p.is_on_sale ?? p.isOnSale ?? false,
     isFeatured: p.is_featured ?? p.isFeatured ?? false,
     isLimitedStock: p.is_limited_stock ?? p.isLimitedStock ?? false,
     isSample: p.is_sample ?? p.isSample ?? false,
+    variants: p.variants ? (Array.isArray(p.variants) ? p.variants : [p.variants]) : [],
     createdBy: p.created_by ?? p.createdBy ?? null,
     createdAt: p.created_at ?? p.createdAt,
     reviews: p.reviews ?? p.review_list ?? null,
@@ -147,6 +149,85 @@ export const getNewProducts = async (limit = 4) => {
     return { data: (data || []).map(normalizeProduct), error: null }
   } catch (error) {
     return { data: null, error: handleSupabaseError(error) }
+  }
+}
+
+/**
+ * Get variants for a product
+ */
+export const getProductVariants = async (productId) => {
+  try {
+    const { data, error } = await supabase
+      .from('product_variants')
+      .select('*')
+      .eq('product_id', productId)
+      .order('created_at', { ascending: true })
+
+    if (error) throw error
+    return { data: data || [], error: null }
+  } catch (error) {
+    return { data: null, error: handleSupabaseError(error) }
+  }
+}
+
+/**
+ * Create a variant for a product
+ */
+export const createVariant = async (productId, variant) => {
+  try {
+    const { data, error } = await supabase
+      .from('product_variants')
+      .insert([
+        {
+          product_id: productId,
+          type: variant.type, // 'size', 'color', etc
+          value: variant.value,
+          sku: variant.sku,
+          price_modifier: variant.priceModifier || 0,
+          stock: variant.stock || 0
+        }
+      ])
+      .select()
+
+    if (error) throw error
+    return { data: data?.[0], error: null }
+  } catch (error) {
+    return { data: null, error: handleSupabaseError(error) }
+  }
+}
+
+/**
+ * Update a variant
+ */
+export const updateVariant = async (variantId, updates) => {
+  try {
+    const { data, error } = await supabase
+      .from('product_variants')
+      .update(updates)
+      .eq('id', variantId)
+      .select()
+
+    if (error) throw error
+    return { data: data?.[0], error: null }
+  } catch (error) {
+    return { data: null, error: handleSupabaseError(error) }
+  }
+}
+
+/**
+ * Delete a variant
+ */
+export const deleteVariant = async (variantId) => {
+  try {
+    const { error } = await supabase
+      .from('product_variants')
+      .delete()
+      .eq('id', variantId)
+
+    if (error) throw error
+    return { error: null }
+  } catch (error) {
+    return { error: handleSupabaseError(error) }
   }
 }
 

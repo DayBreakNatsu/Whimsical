@@ -1,0 +1,78 @@
+{
+  "name": "Whimsical By Achlys",
+  "short_name": "Whimsical",
+  "description": "Beautiful handcrafted flowers and gifts store",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#ffffff",
+  "theme_color": "#c41e3a",
+  "icons": [
+    {
+      "src": "/logo/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/logo/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/logo/icon-maskable-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/logo/icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/logo/screenshot-1.png",
+      "sizes": "540x720",
+      "type": "image/png"
+    },
+    {
+      "src": "/logo/screenshot-2.png",
+      "sizes": "540x720",
+      "type": "image/png"
+    }
+  ],
+  "categories": ["shopping", "e-commerce"],
+  "shortcuts": [
+    {
+      "name": "View Products",
+      "short_name": "Products",
+      "description": "View our product collection",
+      "url": "/products",
+      "icons": [
+        {
+          "src": "/logo/icon-96.png",
+          "sizes": "96x96",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "View Cart",
+      "short_name": "Cart",
+      "description": "View your shopping cart",
+      "url": "/cart",
+      "icons": [
+        {
+          "src": "/logo/icon-96.png",
+          "sizes": "96x96",
+          "type": "image/png"
+        }
+      ]
+    }
+  ]
+}
