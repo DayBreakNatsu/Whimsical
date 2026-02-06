@@ -89,8 +89,18 @@ const CartPage = () => {
 
       const { data, error } = await createOrder(orderData);
       if (error) {
-        setCheckoutError(error.error || 'Failed to place order. Please try again.');
-        showToast('Order placement failed', 'error');
+        // More descriptive error handling for different scenarios
+        let errorMsg = error.error || 'Failed to place order. Please try again.';
+        
+        if (error.code === 'INSUFFICIENT_STOCK') {
+          errorMsg = `⚠️ ${errorMsg} Items may have sold out during checkout. Please refresh and try again.`;
+        } else if (errorMsg.includes('Insufficient stock')) {
+          errorMsg = '⚠️ One or more items are out of stock. Please update your cart and retry.';
+        }
+        
+        setCheckoutError(errorMsg);
+        showToast(errorMsg, 'error');
+        console.error('Order error:', error);
         return;
       }
 

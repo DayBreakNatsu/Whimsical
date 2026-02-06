@@ -11,9 +11,31 @@ export const createOrder = async (orderData) => {
       .select()
       .single()
 
-    if (error) throw error
+    if (error) {
+      // Check for specific error patterns
+      if (error.message?.includes('Insufficient stock')) {
+        return { 
+          data: null, 
+          error: {
+            error: error.message.replace('Insufficient stock: ', ''),
+            code: 'INSUFFICIENT_STOCK'
+          } 
+        }
+      }
+      if (error.message?.includes('not found')) {
+        return { 
+          data: null, 
+          error: {
+            error: 'One or more products are no longer available. Please refresh and try again.',
+            code: 'PRODUCT_NOT_FOUND'
+          } 
+        }
+      }
+      throw error
+    }
     return { data, error: null }
   } catch (error) {
+    console.error('Order creation error:', error)
     return { data: null, error: handleSupabaseError(error) }
   }
 }
