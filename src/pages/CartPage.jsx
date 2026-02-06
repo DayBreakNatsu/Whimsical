@@ -72,7 +72,7 @@ const CartPage = () => {
           address: checkoutForm.address.trim(),
         },
         items: items.map((item) => ({
-          product_id: item.id,
+          product_id: String(item.id).trim(), // Ensure it's a clean string
           name: item.name,
           quantity: item.quantity,
           price: item.price,
